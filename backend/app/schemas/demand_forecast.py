@@ -142,5 +142,20 @@ class DemandGlobalImportanceResponse(BaseModel):
     shap_importance: Optional[List[Dict[str, Any]]] = None
 
 
+class DemandStockSummaryResponse(BaseModel):
+    product_id: str
+    product_name: str
+    current_stock: int
+    next_day_forecast: float
+    next_7_day_forecast: float
+    stock_for_next_day: int
+    stock_for_next_7_days: int
+    recommended_restock: int
+    stock_gap_for_next_day: int
+    stock_gap_for_next_7_days: int
+    status: str
+    summary: str
+
+
 class DemandModelMetadataResponse(BaseModel):
     metadata: Dict[str, Any]

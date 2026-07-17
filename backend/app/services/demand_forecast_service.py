@@ -28,7 +28,11 @@ from app.models.transaction_item import TransactionItem
 from app.models.category import Category
 from app.models.demand_forecast import DemandForecast
 from app.models.enums import TransactionType
-from app.schemas.demand_forecast import DemandForecastRequest, DemandForecastByProductRequest
+from app.schemas.demand_forecast import (
+    DemandForecastRequest,
+    DemandForecastByProductRequest,
+    DemandStockSummaryResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +79,25 @@ def _get_shop_or_404(db: Session, shop_id: uuid.UUID) -> Shop:
             detail=f"Shop {shop_id} not found",
         )
     return shop
+
+
+def _get_product_last_sales_date(
+    db: Session, shop_id: uuid.UUID, product_id: uuid.UUID,
+) -> str:
+    last_item = (
+        db.query(Transaction.created_at)
+        .join(TransactionItem, TransactionItem.transaction_id == Transaction.id)
+        .filter(
+            Transaction.shop_id == shop_id,
+            Transaction.transaction_type == TransactionType.SALE,
+            TransactionItem.product_id == product_id,
+        )
+        .order_by(Transaction.created_at.desc())
+        .first()
+    )
+    if last_item and last_item[0] is not None:
+        return last_item[0].date().isoformat()
+    return datetime.now(timezone.utc).date().isoformat()
 
 
 def _build_product_sales_history(
@@ -290,6 +313,92 @@ def forecast_next_day_for_product(
         logger.error("Failed to save demand forecast to DB: %s", db_exc)
 
     return result
+
+
+def get_stock_demand_summary(
+    db: Session,
+    shop_id: uuid.UUID,
+    product_id: uuid.UUID,
+    payload: DemandForecastByProductRequest,
+) -> DemandStockSummaryResponse:
+    """Combine current stock with forecasted demand for a simple restock summary."""
+    forecaster = _get_forecaster()
+    shop = _get_shop_or_404(db, shop_id)
+    product = _get_product_or_404(db, shop_id, product_id)
+    category = db.query(Category).filter(Category.id == product.category_id).first()
+    category_name = category.name if category else "unknown"
+
+    sales_hist = payload.sales_history
+    tx_hist = payload.transactions_history
+    if sales_hist is None or tx_hist is None:
+        sales_hist, tx_hist, _ = _build_product_sales_history(
+            db, shop_id, product_id, payload.last_date, num_days=21
+        )
+
+    try:
+        next_day_result = forecaster.predict_next_day(
+            shop_id=str(shop_id),
+            category=category_name,
+            location_type=shop.location_type.value,
+            is_staple=int(product.is_staple),
+            is_perishable=int(product.is_perishable),
+            last_date=payload.last_date,
+            sales_history=sales_hist,
+            transactions_history=tx_hist,
+        )
+        seven_day_results = forecaster.predict_next_7_days(
+            shop_id=str(shop_id),
+            category=category_name,
+            location_type=shop.location_type.value,
+            is_staple=int(product.is_staple),
+            is_perishable=int(product.is_perishable),
+            last_date=payload.last_date,
+            sales_history=sales_hist,
+            transactions_history=tx_hist,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Stock demand summary failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Forecast error: {exc}",
+        )
+
+    next_day_units = max(0.0, float(next_day_result.get("predicted_units", 0.0)))
+    seven_day_units = sum(max(0.0, float(r.get("predicted_units", 0.0))) for r in seven_day_results)
+
+    current_stock = int(product.stock_quantity or 0)
+    stock_for_next_day = max(0, current_stock - int(round(next_day_units)))
+    stock_for_next_7_days = max(0, current_stock - int(round(seven_day_units)))
+    recommended_restock = max(0, int(round(seven_day_units)) - current_stock)
+    stock_gap_for_next_day = max(0, int(round(next_day_units)) - current_stock)
+    stock_gap_for_next_7_days = max(0, int(round(seven_day_units)) - current_stock)
+
+    if stock_gap_for_next_7_days > 0:
+        status = "restock"
+        summary = f"Current stock covers only {current_stock} units; demand for the next 7 days is {int(round(seven_day_units))} units. Restock {recommended_restock} units."
+    elif stock_gap_for_next_day > 0:
+        status = "restock"
+        summary = f"Current stock is short for tomorrow by {stock_gap_for_next_day} units."
+    else:
+        status = "healthy"
+        summary = f"Current stock is sufficient for the next 7 days with {current_stock - int(round(seven_day_units))} units to spare."
+
+    return DemandStockSummaryResponse(
+        product_id=str(product_id),
+        product_name=product.product_name,
+        current_stock=current_stock,
+        next_day_forecast=round(next_day_units, 2),
+        next_7_day_forecast=round(seven_day_units, 2),
+        stock_for_next_day=stock_for_next_day,
+        stock_for_next_7_days=stock_for_next_7_days,
+        recommended_restock=recommended_restock,
+        stock_gap_for_next_day=stock_gap_for_next_day,
+        stock_gap_for_next_7_days=stock_gap_for_next_7_days,
+        status=status,
+        summary=summary,
+    )
 
 
 def forecast_next_7_days_for_product(

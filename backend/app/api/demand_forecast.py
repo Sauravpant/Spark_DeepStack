@@ -26,6 +26,7 @@ from app.schemas.demand_forecast import (
     DailyForecastResponse,
     DailyForecastExplainResponse,
     DemandGlobalImportanceResponse,
+    DemandStockSummaryResponse,
 )
 import app.services.demand_forecast_service as demand_service
 
@@ -144,6 +145,25 @@ def predict_next_day_for_product(
     )
     result = demand_service.forecast_next_day_for_product(db, shop_id, full_payload)
     return ApiResponse(message="Product next-day demand forecast generated", data=result)
+
+
+@router_shop.get("/products/{product_id}/stock-summary", response_model=ApiResponse[DemandStockSummaryResponse])
+def get_product_stock_summary(
+    shop_id: uuid.UUID,
+    product_id: uuid.UUID,
+    last_date: str | None = Query(
+        None,
+        description="Optional date of the last known sales data (YYYY-MM-DD). If omitted, the backend will use the latest recorded sale date.",
+    ),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Return a concise stock-vs-demand summary for a product."""
+    if last_date is None:
+        last_date = demand_service.get_product_last_sales_date(db, shop_id, product_id)
+    full_payload = DemandForecastByProductRequest(product_id=product_id, last_date=last_date)
+    result = demand_service.get_stock_demand_summary(db, shop_id, product_id, full_payload)
+    return ApiResponse(message="Stock and demand summary generated", data=result)
 
 
 @router_shop.post("/products/{product_id}/predict-next-7-days", response_model=ApiResponse[List[dict]])
