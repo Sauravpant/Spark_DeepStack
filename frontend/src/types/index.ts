@@ -41,7 +41,7 @@ export interface ApiResponse<T> {
 
 // ── Shops ─────────────────────────────────────────────────────────────────────
 
-export type LocationType = 'urban' | 'semi_urban' | 'rural';
+export type LocationType = "urban" | "semi_urban" | "rural";
 
 export interface Shop {
   id: string;
@@ -168,8 +168,9 @@ export interface UpdateCustomerPayload {
 
 // ── Transactions ──────────────────────────────────────────────────────────────
 
-export type PaymentType = 'cash' | 'credit' | 'qr';
-export type CreditStatus = 'paid' | 'unpaid' | 'overdue';
+export type PaymentType = "cash" | "credit" | "qr";
+export type CreditStatus = "paid" | "unpaid" | "overdue";
+export type TransactionType = "sale" | "purchase";
 
 export interface TransactionItem {
   id: string;
@@ -195,6 +196,7 @@ export interface Transaction {
   id: string;
   shop_id: string;
   customer_id?: string;
+  transaction_type: TransactionType;
   payment_type: PaymentType;
   subtotal: number;
   discount: number;

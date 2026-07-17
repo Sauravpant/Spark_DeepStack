@@ -13,7 +13,7 @@ export const ROUTES = {
   CUSTOMERS: '/customers',
   CREDIT_RISK: '/credit-risk',
   DEMAND_FORECASTING: '/demand-forecasting',
-  BAZAR_VOICE: '/bazar-voice',
+  VYAPAR_VOICE: '/vyapar-voice',
   REPORTS: '/reports',
   NOTIFICATIONS: '/notifications',
   SETTINGS: '/settings',

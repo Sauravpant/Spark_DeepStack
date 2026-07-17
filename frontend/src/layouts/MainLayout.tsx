@@ -21,6 +21,7 @@ import {
   ChevronsUpDown,
   Plus,
   Tags,
+  Mic,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -44,6 +45,7 @@ const sidebarNav = [
   { title: 'Customers', icon: Users, href: ROUTES.CUSTOMERS },
   { title: 'Credit Risk', icon: ShieldAlert, href: ROUTES.CREDIT_RISK },
   { title: 'Demand Forecasting', icon: TrendingUp, href: ROUTES.DEMAND_FORECASTING },
+  { title: 'Vyapar Voice', icon: Mic, href: ROUTES.VYAPAR_VOICE },
   { title: 'Reports', icon: BarChart3, href: ROUTES.REPORTS },
 ];
 

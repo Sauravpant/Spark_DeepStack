@@ -14,6 +14,7 @@ import Settings from '@/pages/Settings';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ShopSetup from '@/pages/ShopSetup';
+import VyaparVoice from '@/pages/VyaparVoice';
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: 'customers', element: <Customers /> },
       { path: 'transactions', element: <Transactions /> },
       { path: 'demand-forecasting', element: <DemandForecast /> },
+      { path: 'vyapar-voice', element: <VyaparVoice /> },
       { path: 'reports', element: <Reports /> },
       { path: 'notifications', element: <Notifications /> },
       { path: 'settings', element: <Settings /> },
