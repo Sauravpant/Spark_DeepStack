@@ -353,6 +353,21 @@ export interface DemandForecastDay {
   location_type?: string;
 }
 
+export interface DemandStockSummary {
+  product_id: string;
+  product_name: string;
+  current_stock: number;
+  next_day_forecast: number;
+  next_7_day_forecast: number;
+  stock_for_next_day: number;
+  stock_for_next_7_days: number;
+  recommended_restock: number;
+  stock_gap_for_next_day: number;
+  stock_gap_for_next_7_days: number;
+  status: string;
+  summary: string;
+}
+
 export interface DemandForecastRequest {
   shop_id: string;
   category: string;

@@ -8,6 +8,7 @@ import {
   getDemandForecastNextDay,
   getDemandGlobalImportance,
   getDemandModelInfo,
+  getDemandStockSummary,
   predictCreditRisk,
   predictCreditRiskForCustomer,
   predictCreditRiskProbability,
@@ -103,6 +104,15 @@ export function useDemandForecastNextDay(shopId: string, productId: string | nul
   return useQuery({
     queryKey: ['demand-forecast', shopId, productId, '1d'],
     queryFn: () => getDemandForecastNextDay(shopId, productId!),
+    enabled: !!shopId && !!productId,
+    retry: 1,
+  });
+}
+
+export function useDemandStockSummary(shopId: string, productId: string | null, lastDate?: string) {
+  return useQuery({
+    queryKey: lastDate ? ['demand-stock-summary', shopId, productId, lastDate] : ['demand-stock-summary', shopId, productId],
+    queryFn: () => getDemandStockSummary(shopId, productId!, lastDate),
     enabled: !!shopId && !!productId,
     retry: 1,
   });

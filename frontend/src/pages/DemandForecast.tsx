@@ -6,6 +6,7 @@ import {
   useDemandForecastNextDay,
   useDemandModelInfo,
   useDemandGlobalImportance,
+  useDemandStockSummary,
 } from "@/hooks/useML";
 import { PageSkeleton } from "@/components/ui/LoadingSkeleton";
 import { ErrorState, EmptyState } from "@/components/ui/StateComponents";
@@ -76,6 +77,7 @@ export default function DemandForecast() {
   } = useDemandForecast7Days(shopId, selectedId);
 
   const { data: nextDay } = useDemandForecastNextDay(shopId, selectedId);
+  const { data: stockSummary } = useDemandStockSummary(shopId, selectedId);
   const { data: modelInfo } = useDemandModelInfo(!!shopId);
   const { data: globalImportance, isLoading: globalLoading } =
     useDemandGlobalImportance(!!shopId && showGlobal);
@@ -165,6 +167,53 @@ export default function DemandForecast() {
             <Sparkles className="w-3.5 h-3.5 mr-1.5" />
             AI Powered
           </Badge>
+        </div>
+      </div>
+
+      {/* ── Stock vs demand summary card ── */}
+      <div className="rounded-2xl border border-slate-200/80 bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-6 text-white shadow-sm">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
+              <Package className="w-3.5 h-3.5" /> Stock planning
+            </div>
+            <h2 className="mt-2 text-xl font-bold text-white">
+              {selected?.product_name ?? "Selected product"}
+            </h2>
+            <p className="mt-2 text-sm text-slate-300">
+              {stockSummary?.summary ?? "Comparing current inventory with AI demand projections for the next day and next 7 days."}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-300">Status</p>
+            <p className="mt-1 text-lg font-semibold text-white">
+              {stockSummary?.status === "restock" ? "Restock recommended" : "Healthy stock"}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-white/10 p-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-300">Current stock</p>
+            <p className="mt-2 text-2xl font-semibold text-white">{stockSummary?.current_stock ?? selected?.stock_quantity ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/10 p-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-300">Next 1 day</p>
+            <p className="mt-2 text-2xl font-semibold text-white">{stockSummary?.next_day_forecast ?? nextDay?.predicted_units?.toFixed(1) ?? "—"}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/10 p-4">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-300">Next 7 days</p>
+            <p className="mt-2 text-2xl font-semibold text-white">{stockSummary?.next_7_day_forecast ?? totalPredicted.toFixed(0)}</p>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-3">
+          <div className="rounded-full bg-emerald-500/20 px-3 py-1 text-sm font-semibold text-emerald-200">
+            {stockSummary?.recommended_restock ? `Restock ${stockSummary.recommended_restock} units` : "No urgent restock needed"}
+          </div>
+          <div className="rounded-full bg-red-500/20 px-3 py-1 text-sm font-semibold text-red-200">
+            {stockSummary?.stock_gap_for_next_7_days ? `Gap ${stockSummary.stock_gap_for_next_7_days} units` : "Covered for 7 days"}
+          </div>
         </div>
       </div>
 

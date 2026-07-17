@@ -9,6 +9,7 @@ import type {
   DemandForecastExplainDay,
   DemandForecastRequest,
   DemandGlobalImportance,
+  DemandStockSummary,
 } from "@/types";
 
 const KATHMANDU_TIME_ZONE = "Asia/Kathmandu";
@@ -180,6 +181,19 @@ export async function explainDemandNext7Days(
   const res = await api.post<ApiResponse<DemandForecastExplainDay[]>>(
     "/ml/demand/explain-next-7-days",
     payload,
+  );
+  return res.data.data;
+}
+
+export async function getDemandStockSummary(
+  shopId: string,
+  productId: string,
+  lastDate?: string,
+): Promise<DemandStockSummary> {
+  const params = lastDate ? { last_date: lastDate } : undefined;
+  const res = await api.get<ApiResponse<DemandStockSummary>>(
+    `/shops/${shopId}/demand/products/${productId}/stock-summary`,
+    { params },
   );
   return res.data.data;
 }
