@@ -4,12 +4,12 @@
 
 A voice-first AI copilot helping Nepalese kirana (retail) store owners make smarter credit and inventory decisions — instantly, in Nepali, by voice.
 
-Built by **Team Catalyst** for the **Spark_DeepStack** hackathon.
+Built by **Team DeepStack** for the **Spark_DeepStack** hackathon.
 
 |                  |                                                                                                                                                                                        |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Project Name** | VyaparAI                                                                                                                                                                               |
-| **Team**         | Team Catalyst                                                                                                                                                                          |
+| **Team**         | DeepStack                                                                                                                                                                          |
 | **Track**        | AI and Smart Automation |
 | **Repository**   | Spark_DeepStack                                                                                                                                                                        |
 | **Department**   | Computer Engineering                                                                                                                                                                   |
@@ -282,7 +282,7 @@ _TODO: fill in before submission if applicable._ If any part of this codebase, d
 
 ## Team
 
-**Team Catalyst** — Department of Computer Engineering
+**Team DeepStack** — Department of Computer Engineering
 
 | Name              | Role               |
 | ----------------- | ------------------ |
@@ -299,4 +299,4 @@ _TODO: fill in before submission if applicable._ If any part of this codebase, d
 
 ## License
 
-This project was built for hackathon purposes. Add your chosen license here (e.g. MIT, Apache 2.0).
+This project was built for hackathon purposes.
