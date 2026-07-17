@@ -6,9 +6,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-# ---------------------------------------------------------------------------
-# Core config
-# ---------------------------------------------------------------------------
+
 RANDOM_SEED: int = 42
 TARGET_COL: str = "units_sold"
 GROUP_COLS: list[str] = ["shop_id", "category"]
@@ -17,19 +15,12 @@ LAG_DAYS: list[int] = [1, 2, 3, 7, 14]
 ROLLING_WINDOWS: list[int] = [3, 7, 14]
 MAX_LAG: int = max(LAG_DAYS)
 
-# Minimum trailing daily history the API consumer must supply per
-# (shop_id, category). 14 (max lag) + 7 day safety buffer for rolling/trend
-# stability at the very first recursive forecasting step.
+
 MIN_HISTORY_DAYS: int = MAX_LAG + 7  # = 21
 
 FORECAST_HORIZON: int = 7
 
-# ---------------------------------------------------------------------------
-# Festival calendar (Dashain / Tihar), 2020-2026 only.
-# Sourced directly from the VyaparAI synthetic data generator so that
-# training features and inference-time features use an identical calendar.
-# NOTE: intentionally NOT extended to 2027+ per current scope.
-# ---------------------------------------------------------------------------
+
 DASHAIN_DATES: dict[int, str] = {
     2020: "2020-10-25", 2021: "2021-10-15", 2022: "2022-10-05",
     2023: "2023-10-24", 2024: "2024-10-12", 2025: "2025-10-06", 2026: "2026-10-20",
