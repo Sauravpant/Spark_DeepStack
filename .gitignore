@@ -1,0 +1,196 @@
+# ============================================================
+# Global
+# ============================================================
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+*.orig
+
+# IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+Desktop.ini
+
+# ============================================================
+# Environment Variables
+# ============================================================
+.env
+.env.*
+!.env.example
+
+# ============================================================
+# Node / React Frontend
+# ============================================================
+node_modules/
+
+dist/
+build/
+coverage/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+.vite/
+.cache/
+
+.eslintcache
+
+# Testing
+playwright-report/
+test-results/
+coverage/
+
+# ============================================================
+# Python / FastAPI
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Type Checking
+.mypy_cache/
+.pytype/
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Linting
+.ruff_cache/
+.pylint.d/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ============================================================
+# ML Models
+# ============================================================
+*.pkl
+*.pickle
+*.joblib
+*.h5
+*.keras
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.pb
+*.tflite
+
+# Large datasets
+data/
+datasets/
+dataset/
+raw_data/
+processed_data/
+training_data/
+
+# Training outputs
+runs/
+wandb/
+mlruns/
+tensorboard/
+lightning_logs/
+
+# Experiment outputs
+predictions/
+artifacts/
+checkpoints/
+logs/
+
+# ============================================================
+# FastAPI
+# ============================================================
+instance/
+
+# SQLite
+*.db
+*.sqlite3
+
+# Uploaded files
+uploads/
+media/
+static/uploads/
+
+# Generated files
+generated/
+temp/
+tmp/
+
+# ============================================================
+# Docker
+# ============================================================
+.docker/
+
+# Docker override
+docker-compose.override.yml
+
+# ============================================================
+# VSCode Testing
+# ============================================================
+.history/
+
+# ============================================================
+# Secrets
+# ============================================================
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# Firebase
+firebase-adminsdk*.json
+
+# Google Cloud
+gcloud-service-key.json
+
+# AWS
+.aws/
+
+# ============================================================
+# Misc
+# ============================================================
+.cache-loader/
+.sass-cache/
+
+# ============================================================
+# Mac
+# ============================================================
+.AppleDouble
+.LSOverride
+
+# ============================================================
+# Linux
+# ============================================================
+*~
+
+# ============================================================
+# Keep Empty Folders
+# ============================================================
+!.gitkeep
