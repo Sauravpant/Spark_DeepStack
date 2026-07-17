@@ -8,7 +8,9 @@ import type {
   DemandForecastDay,
   DemandForecastExplainDay,
   DemandForecastRequest,
+  DemandGlobalImportance,
 } from '@/types';
+
 
 export interface DemandProductPayload {
   last_date: string;
@@ -173,8 +175,8 @@ export async function getDemandModelInfo(): Promise<Record<string, unknown>> {
   return res.data.data;
 }
 
-export async function getDemandGlobalImportance(): Promise<Record<string, unknown>> {
-  const res = await api.get<ApiResponse<Record<string, unknown>>>(
+export async function getDemandGlobalImportance(): Promise<DemandGlobalImportance> {
+  const res = await api.get<ApiResponse<DemandGlobalImportance>>(
     '/ml/demand/global-importance'
   );
   return res.data.data;

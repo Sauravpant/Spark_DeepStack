@@ -23,6 +23,10 @@ import {
   AlertTriangle,
   Loader2,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
+  BarChart3,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/utils/format';
@@ -43,12 +47,44 @@ function riskFromCustomer(c: Customer) {
   return 'Low Risk';
 }
 
+function ShapBar({
+  feature,
+  value,
+  maxVal,
+  positive,
+}: {
+  feature: string;
+  value: number;
+  maxVal: number;
+  positive: boolean;
+}) {
+  const pct = maxVal > 0 ? Math.min(100, (Math.abs(value) / maxVal) * 100) : 0;
+  return (
+    <div>
+      <div className="flex justify-between text-xs font-semibold mb-1.5">
+        <span className="text-slate-700 truncate pr-4">{featureLabel(feature)}</span>
+        <span className={positive ? 'text-red-600 shrink-0' : 'text-emerald-600 shrink-0'}>
+          {positive ? '+' : ''}
+          {value.toFixed(3)}
+        </span>
+      </div>
+      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+        <div
+          className={cn('h-full rounded-full', positive ? 'bg-red-500' : 'bg-emerald-500')}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function CreditRisk() {
   const { activeShop, user } = useAuth();
   const shopId = activeShop?.id ?? '';
   const { data: customers, isLoading, isError, refetch } = useCustomers(shopId);
   const [search, setSearch] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showGlobal, setShowGlobal] = useState(false);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -59,10 +95,10 @@ export default function CreditRisk() {
     );
   }, [customers, search]);
 
-  // Auto-select first customer once loaded
   const effectiveId = selectedId ?? filtered[0]?.id ?? null;
   const selected = customers?.find((c) => c.id === effectiveId) ?? null;
 
+  // ── Per-customer SHAP explain ────────────────────────────────────────────────
   const {
     data: explanation,
     isLoading: explainLoading,
@@ -71,29 +107,60 @@ export default function CreditRisk() {
     refetch: refetchExplain,
   } = useCreditRiskExplain(shopId, effectiveId);
 
+  // ── Per-customer predict (save to DB) ────────────────────────────────────────
   const predictMutation = useCreditRiskPredict(shopId);
-  const { data: globalImportance } = useCreditRiskGlobalImportance(!!shopId);
+
+  // ── Global importance + model info ───────────────────────────────────────────
+  const { data: globalImportance, isLoading: globalLoading } = useCreditRiskGlobalImportance(
+    !!shopId && showGlobal
+  );
   const { data: modelInfo } = useCreditRiskModelInfo(!!shopId);
 
+  // ── Update customer credit limit ──────────────────────────────────────────────
   const updateCustomer = useUpdateCustomer(shopId, effectiveId ?? '');
 
+  // ── Derived metrics ───────────────────────────────────────────────────────────
   const score = explanation
     ? Math.round((1 - explanation.risk_probability) * 100)
     : null;
   const repayProb = explanation
     ? Math.round((1 - explanation.risk_probability) * 1000) / 10
     : null;
-  const suggestedLimit = selected && explanation
-    ? explanation.is_risk
-      ? Math.round(selected.credit_limit * 0.5)
-      : Math.round(selected.credit_limit * 1.1)
-    : null;
+  const suggestedLimit =
+    selected && explanation
+      ? explanation.is_risk
+        ? Math.round(selected.credit_limit * 0.5)
+        : Math.round(selected.credit_limit * 1.1)
+      : null;
+
+  const modelName = String(
+    (modelInfo as any)?.metadata?.model_name ??
+      (modelInfo as any)?.model ??
+      'credit risk'
+  );
+
+  const maxPositive = (explanation?.top_positive_features ?? []).reduce(
+    (m, f) => Math.max(m, Math.abs(f.shap_value)),
+    0
+  );
+  const maxNegative = (explanation?.top_negative_features ?? []).reduce(
+    (m, f) => Math.max(m, Math.abs(f.shap_value)),
+    0
+  );
+
+  const globalEntries = globalImportance?.ranked_features?.slice(0, 12) ?? [];
+  const globalValues = globalImportance?.mean_abs_shap_values ?? {};
+  const globalMax = Object.values(globalValues).reduce(
+    (m: number, v: unknown) => Math.max(m, Math.abs(Number(v))),
+    0
+  );
 
   if (!shopId || isLoading) return <PageSkeleton />;
   if (isError) return <ErrorState onRetry={refetch} />;
 
   return (
     <div className="flex h-full w-full bg-slate-50 overflow-hidden">
+      {/* ── Customer sidebar ── */}
       <div className="w-80 bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
         <div className="p-4 border-b border-slate-200">
           <div className="relative">
@@ -194,11 +261,16 @@ export default function CreditRisk() {
         </div>
       </div>
 
+      {/* ── Main content ── */}
       <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Topbar */}
         <div className="h-16 px-6 border-b border-slate-200 flex justify-between items-center gap-4 bg-white sticky top-0 z-10">
           <div className="flex items-center gap-2 text-sm text-slate-600">
             <Sparkles className="w-4 h-4 text-red-600" />
             AI Credit Risk Analysis
+            {modelInfo && (
+              <span className="text-xs text-slate-400 ml-2">· {modelName}</span>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <div className="flex flex-col items-end">
@@ -237,13 +309,20 @@ export default function CreditRisk() {
               {(explainErr as any)?.response?.data?.message ||
                 'Ensure ML models are loaded on the backend (/health).'}
             </p>
-            <Button onClick={() => refetchExplain()} className="bg-red-600 hover:bg-red-700 text-white">
+            <Button
+              onClick={() => refetchExplain()}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
               Retry
             </Button>
           </div>
         ) : explanation ? (
           <div className="p-8 max-w-5xl mx-auto w-full flex flex-col gap-6">
+
+            {/* ── Score card + actions ── */}
             <div className="flex flex-col lg:flex-row gap-6">
+              {/* Score ring + summary */}
               <Card className="flex-1 border-slate-200 shadow-sm p-8 flex flex-col md:flex-row items-center gap-8 bg-white">
                 <div className="flex flex-col items-center justify-center shrink-0">
                   <div className="relative w-32 h-32 flex items-center justify-center">
@@ -284,6 +363,9 @@ export default function CreditRisk() {
                       </span>
                     </div>
                   </div>
+                  <p className="text-xs text-slate-500 mt-3 text-center">
+                    Base prob: {(explanation.base_probability * 100).toFixed(1)}%
+                  </p>
                 </div>
 
                 <div className="flex-1 flex flex-col justify-center">
@@ -299,12 +381,11 @@ export default function CreditRisk() {
                     >
                       {explanation.is_risk ? 'Elevated Risk' : 'Good Standing'}
                     </div>
+                    <Badge className="text-[10px] border-0 bg-slate-100 text-slate-600">
+                      Risk prob: {(explanation.risk_probability * 100).toFixed(1)}%
+                    </Badge>
                     <p className="text-xs font-medium text-slate-500">
-                      Member since{' '}
-                      {new Date(selected.created_at).toLocaleDateString('en-IN', {
-                        month: 'short',
-                        year: 'numeric',
-                      })}
+                      Threshold: {(explanation.threshold * 100).toFixed(0)}%
                     </p>
                   </div>
                   <p className="text-sm text-slate-600 leading-relaxed font-medium">
@@ -314,10 +395,13 @@ export default function CreditRisk() {
                 </div>
               </Card>
 
+              {/* Action panel */}
               <div className="w-full lg:w-64 bg-slate-100/50 rounded-xl border border-slate-200 p-5 flex flex-col gap-4">
                 <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
                   Recommended Actions
                 </h3>
+
+                {/* Save prediction to DB */}
                 <Button
                   variant="outline"
                   className="w-full justify-start h-12 bg-white border-slate-200 text-slate-700 rounded-lg"
@@ -337,13 +421,13 @@ export default function CreditRisk() {
                   )}
                   Save Prediction
                 </Button>
+
+                {/* Apply suggested credit limit */}
                 {suggestedLimit != null && (
                   <Button
                     className="w-full justify-start h-14 bg-[#E3182D] hover:bg-red-700 text-white rounded-lg"
                     disabled={updateCustomer.isPending}
-                    onClick={() =>
-                      updateCustomer.mutate({ credit_limit: suggestedLimit })
-                    }
+                    onClick={() => updateCustomer.mutate({ credit_limit: suggestedLimit })}
                   >
                     {updateCustomer.isPending ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -359,16 +443,15 @@ export default function CreditRisk() {
                     )}
                   </Button>
                 )}
+
+                {/* Model info */}
                 {modelInfo && (
                   <p className="text-[10px] text-slate-500 leading-relaxed">
-                    Model:{' '}
-                    {String(
-                      (modelInfo as any)?.metadata?.model_name ??
-                        (modelInfo as any)?.model ??
-                        'credit risk'
-                    )}
+                    Model: {modelName}
                   </p>
                 )}
+
+                {/* Top 3 global drivers */}
                 {globalImportance?.ranked_features?.slice(0, 3)?.length ? (
                   <div className="text-[10px] text-slate-500 space-y-1">
                     <p className="font-bold uppercase tracking-wider">Top global drivers</p>
@@ -377,6 +460,7 @@ export default function CreditRisk() {
                     ))}
                   </div>
                 ) : null}
+
                 <Button
                   variant="outline"
                   className="w-full justify-start h-14 bg-white border-slate-200 text-slate-700 rounded-lg"
@@ -390,6 +474,7 @@ export default function CreditRisk() {
               </div>
             </div>
 
+            {/* ── 3 KPI cards ── */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="border-slate-200 shadow-sm">
                 <CardContent className="p-6">
@@ -416,7 +501,10 @@ export default function CreditRisk() {
                   </div>
                   <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                     <div
-                      className="bg-emerald-600 h-full rounded-full"
+                      className={cn(
+                        'h-full rounded-full',
+                        repayProb! >= 70 ? 'bg-emerald-600' : repayProb! >= 40 ? 'bg-amber-500' : 'bg-red-600'
+                      )}
                       style={{ width: `${repayProb}%` }}
                     />
                   </div>
@@ -438,7 +526,9 @@ export default function CreditRisk() {
               </Card>
             </div>
 
+            {/* ── SHAP breakdown ── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Protective drivers (negative SHAP = reduce risk) */}
               <Card className="border-slate-200 shadow-sm">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6 text-lg">
@@ -449,30 +539,20 @@ export default function CreditRisk() {
                       <p className="text-sm text-slate-500">No protective drivers found</p>
                     ) : (
                       explanation.top_negative_features.map((driver, i) => (
-                        <div key={i}>
-                          <div className="flex justify-between text-xs font-bold mb-2">
-                            <span className="text-slate-700">
-                              {featureLabel(driver.feature)}
-                            </span>
-                            <span className="text-emerald-600">
-                              {driver.shap_value.toFixed(3)}
-                            </span>
-                          </div>
-                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                            <div
-                              className="bg-emerald-500 h-full rounded-full"
-                              style={{
-                                width: `${Math.min(100, Math.abs(driver.shap_value) * 200)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
+                        <ShapBar
+                          key={i}
+                          feature={driver.feature}
+                          value={driver.shap_value}
+                          maxVal={maxNegative}
+                          positive={false}
+                        />
                       ))
                     )}
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Risk drivers (positive SHAP = increase risk) */}
               <Card className="border-slate-200 shadow-sm">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6 text-lg">
@@ -483,29 +563,161 @@ export default function CreditRisk() {
                       <p className="text-sm text-slate-500">No risk drivers found</p>
                     ) : (
                       explanation.top_positive_features.map((driver, i) => (
-                        <div key={i}>
-                          <div className="flex justify-between text-xs font-bold mb-2">
-                            <span className="text-slate-700">
-                              {featureLabel(driver.feature)}
-                            </span>
-                            <span className="text-red-600">
-                              +{driver.shap_value.toFixed(3)}
-                            </span>
-                          </div>
-                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                            <div
-                              className="bg-red-600 h-full rounded-full"
-                              style={{
-                                width: `${Math.min(100, Math.abs(driver.shap_value) * 200)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
+                        <ShapBar
+                          key={i}
+                          feature={driver.feature}
+                          value={driver.shap_value}
+                          maxVal={maxPositive}
+                          positive={true}
+                        />
                       ))
                     )}
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* ── Feature contributions heat table ── */}
+            {explanation.feature_contributions &&
+              Object.keys(explanation.feature_contributions).length > 0 && (
+                <Card className="border-slate-200 shadow-sm">
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-slate-800 mb-4 text-base">
+                      All Feature Contributions (SHAP values)
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-100">
+                            <th className="text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase">
+                              Feature
+                            </th>
+                            <th className="text-right px-3 py-2 text-xs font-bold text-slate-500 uppercase">
+                              SHAP Value
+                            </th>
+                            <th className="text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase w-40">
+                              Impact
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {Object.entries(explanation.feature_contributions)
+                            .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+                            .map(([feat, val]) => {
+                              const maxAll = Math.max(
+                                ...Object.values(explanation.feature_contributions).map(Math.abs)
+                              );
+                              const pct = maxAll > 0 ? (Math.abs(val) / maxAll) * 100 : 0;
+                              return (
+                                <tr key={feat} className="hover:bg-slate-50/50">
+                                  <td className="px-3 py-2 text-slate-700 font-medium">
+                                    {featureLabel(feat)}
+                                  </td>
+                                  <td
+                                    className={cn(
+                                      'px-3 py-2 text-right font-mono text-xs font-bold',
+                                      val > 0 ? 'text-red-600' : 'text-emerald-600'
+                                    )}
+                                  >
+                                    {val > 0 ? '+' : ''}
+                                    {val.toFixed(4)}
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                      <div
+                                        className={cn(
+                                          'h-full rounded-full',
+                                          val > 0 ? 'bg-red-500' : 'bg-emerald-500'
+                                        )}
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+            {/* ── Global Feature Importance (collapsible) ── */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <button
+                onClick={() => setShowGlobal((v) => !v)}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  <span className="font-bold text-sm text-slate-900">
+                    Global Feature Importance
+                  </span>
+                  <Badge className="bg-blue-50 text-blue-600 border-blue-200 border text-[10px] h-auto px-2">
+                    Mean SHAP
+                  </Badge>
+                </div>
+                {showGlobal ? (
+                  <ChevronUp className="w-4 h-4 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                )}
+              </button>
+
+              {showGlobal && (
+                <div className="px-5 pb-5 border-t border-slate-100">
+                  {globalLoading ? (
+                    <div className="flex items-center justify-center py-10 gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-red-600" />
+                      <span className="text-sm text-slate-500">
+                        Loading global importance from model...
+                      </span>
+                    </div>
+                  ) : globalEntries.length === 0 ? (
+                    <p className="text-sm text-slate-500 py-8 text-center">
+                      No global importance data available.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-slate-500 mt-4 mb-5">
+                        Ranked by mean absolute SHAP value across the training set. These are the
+                        features that most consistently drive credit risk predictions across all customers.
+                      </p>
+                      <div className="space-y-4">
+                        {globalEntries.map((feat, i) => {
+                          const val = globalValues[feat] ?? 0;
+                          const pct =
+                            globalMax > 0 ? Math.min(100, (Math.abs(Number(val)) / globalMax) * 100) : 0;
+                          return (
+                            <div key={feat} className="flex items-center gap-3">
+                              <span className="text-xs font-bold text-slate-400 w-5 shrink-0">
+                                #{i + 1}
+                              </span>
+                              <div className="flex-1">
+                                <div className="flex justify-between text-xs font-semibold mb-1.5">
+                                  <span className="text-slate-700 truncate pr-4">
+                                    {featureLabel(feat)}
+                                  </span>
+                                  <span className="text-blue-600 shrink-0">
+                                    {Number(val).toFixed(4)}
+                                  </span>
+                                </div>
+                                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                  <div
+                                    className="bg-blue-500 h-full rounded-full"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : null}

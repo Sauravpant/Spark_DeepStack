@@ -335,6 +335,12 @@ export interface CreditRiskGlobalImportance {
 
 // ── ML Demand ─────────────────────────────────────────────────────────────────
 
+/** Backend demand explain uses 'impact' (not 'shap_value') */
+export interface DemandShapFeature {
+  feature: string;
+  impact: number;
+}
+
 export interface DemandForecastDay {
   forecast_date: string;
   predicted_units: number;
@@ -356,9 +362,24 @@ export interface DemandForecastRequest {
   transactions_history: number[];
 }
 
-export interface DemandForecastExplainDay extends DemandForecastDay {
-  top_positive_features?: ShapFeature[];
-  top_negative_features?: ShapFeature[];
-  human_readable_explanation?: string;
-  feature_contributions?: Record<string, number>;
+/** Response from /explain-next-day and /explain-next-7-days */
+export interface DemandForecastExplainDay {
+  forecast_date: string;
+  prediction: number;
+  base_value: number;
+  top_positive_features: DemandShapFeature[];
+  top_negative_features: DemandShapFeature[];
+  feature_contributions: Record<string, number>;
+  human_readable_explanation: string;
+}
+
+export interface DemandGlobalImportanceEntry {
+  feature: string;
+  importance: number;
+  rank?: number;
+}
+
+export interface DemandGlobalImportance {
+  native_importance: DemandGlobalImportanceEntry[];
+  shap_importance?: DemandGlobalImportanceEntry[];
 }

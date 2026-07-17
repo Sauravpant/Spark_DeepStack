@@ -17,7 +17,12 @@ import {
   explainDemandNextDay,
   explainDemandNext7Days,
 } from '@/services/ml.service';
-import type { CreditRiskFeatures, DemandForecastRequest } from '@/types';
+import type {
+  CreditRiskFeatures,
+  DemandForecastRequest,
+  DemandGlobalImportance,
+  DemandForecastExplainDay,
+} from '@/types';
 
 // ── Per-customer credit risk ──────────────────────────────────────────────────
 
@@ -119,13 +124,15 @@ export function useGenericDemandNext7Days() {
 
 export function useGenericDemandExplainNextDay() {
   return useMutation({
-    mutationFn: (payload: DemandForecastRequest) => explainDemandNextDay(payload),
+    mutationFn: (payload: DemandForecastRequest) =>
+      explainDemandNextDay(payload) as Promise<DemandForecastExplainDay>,
   });
 }
 
 export function useGenericDemandExplainNext7Days() {
   return useMutation({
-    mutationFn: (payload: DemandForecastRequest) => explainDemandNext7Days(payload),
+    mutationFn: (payload: DemandForecastRequest) =>
+      explainDemandNext7Days(payload) as Promise<DemandForecastExplainDay[]>,
   });
 }
 
@@ -139,9 +146,9 @@ export function useDemandModelInfo(enabled = true) {
 }
 
 export function useDemandGlobalImportance(enabled = true) {
-  return useQuery({
+  return useQuery<DemandGlobalImportance>({
     queryKey: ['demand', 'global-importance'],
-    queryFn: getDemandGlobalImportance,
+    queryFn: getDemandGlobalImportance as () => Promise<DemandGlobalImportance>,
     enabled,
     staleTime: 1000 * 60 * 30,
   });
