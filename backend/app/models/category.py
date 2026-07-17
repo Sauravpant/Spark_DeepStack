@@ -1,8 +1,8 @@
 import uuid
 from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from backend.app.models.product import Product
-from db.database import Base
+from app.db.database import Base
+
 
 class Category(Base):
     __tablename__ = "categories"
