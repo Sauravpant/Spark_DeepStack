@@ -26,6 +26,7 @@ from app.models.shop import Shop
 from app.models.transaction import Transaction
 from app.models.transaction_item import TransactionItem
 from app.models.category import Category
+from app.models.demand_forecast import DemandForecast
 from app.schemas.demand_forecast import DemandForecastRequest, DemandForecastByProductRequest
 
 logger = logging.getLogger(__name__)
@@ -238,6 +239,13 @@ def forecast_next_day_for_product(
     category = db.query(Category).filter(Category.id == product.category_id).first()
     category_name = category.name if category else "unknown"
 
+    sales_hist = payload.sales_history
+    tx_hist = payload.transactions_history
+    if sales_hist is None or tx_hist is None:
+        sales_hist, tx_hist, _ = _build_product_sales_history(
+            db, shop_id, payload.product_id, payload.last_date, num_days=21
+        )
+
     try:
         result = forecaster.predict_next_day(
             shop_id=str(shop_id),
@@ -246,8 +254,8 @@ def forecast_next_day_for_product(
             is_staple=int(product.is_staple),
             is_perishable=int(product.is_perishable),
             last_date=payload.last_date,
-            sales_history=payload.sales_history,
-            transactions_history=payload.transactions_history,
+            sales_history=sales_hist,
+            transactions_history=tx_hist,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
@@ -261,6 +269,24 @@ def forecast_next_day_for_product(
     result["product_id"] = str(payload.product_id)
     result["category"] = category_name
     result["location_type"] = shop.location_type.value
+
+    # Save to database
+    try:
+        f_date = datetime.strptime(result["forecast_date"], "%Y-%m-%d").date()
+        forecast_record = DemandForecast(
+            shop_id=shop_id,
+            product_id=payload.product_id,
+            forecast_date=f_date,
+            predicted_quantity=round(result["predicted_units"]),
+            confidence_score=result["confidence"],
+            model_version=result["model"]
+        )
+        db.add(forecast_record)
+        db.commit()
+    except Exception as db_exc:
+        db.rollback()
+        logger.error("Failed to save demand forecast to DB: %s", db_exc)
+
     return result
 
 
@@ -276,6 +302,13 @@ def forecast_next_7_days_for_product(
     category = db.query(Category).filter(Category.id == product.category_id).first()
     category_name = category.name if category else "unknown"
 
+    sales_hist = payload.sales_history
+    tx_hist = payload.transactions_history
+    if sales_hist is None or tx_hist is None:
+        sales_hist, tx_hist, _ = _build_product_sales_history(
+            db, shop_id, payload.product_id, payload.last_date, num_days=21
+        )
+
     try:
         results = forecaster.predict_next_7_days(
             shop_id=str(shop_id),
@@ -284,8 +317,8 @@ def forecast_next_7_days_for_product(
             is_staple=int(product.is_staple),
             is_perishable=int(product.is_perishable),
             last_date=payload.last_date,
-            sales_history=payload.sales_history,
-            transactions_history=payload.transactions_history,
+            sales_history=sales_hist,
+            transactions_history=tx_hist,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
@@ -300,6 +333,25 @@ def forecast_next_7_days_for_product(
     for r in results:
         r["product_id"] = product_id_str
         r["category"] = category_name
+
+    # Save to database
+    try:
+        for r in results:
+            f_date = datetime.strptime(r["forecast_date"], "%Y-%m-%d").date()
+            forecast_record = DemandForecast(
+                shop_id=shop_id,
+                product_id=payload.product_id,
+                forecast_date=f_date,
+                predicted_quantity=round(r["predicted_units"]),
+                confidence_score=r["confidence"],
+                model_version=r["model"]
+            )
+            db.add(forecast_record)
+        db.commit()
+    except Exception as db_exc:
+        db.rollback()
+        logger.error("Failed to save 7-day demand forecasts to DB: %s", db_exc)
+
     return results
 
 
