@@ -10,7 +10,7 @@ Built by **Team Catalyst** for the **Spark_DeepStack** hackathon.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Project Name** | VyaparAI                                                                                                                                                                               |
 | **Team**         | Team Catalyst                                                                                                                                                                          |
-| **Track**        | _TODO: confirm exact track name (e.g. "AI/ML for Social Impact" or "FinTech")_ — this project targets financial inclusion & AI-driven decision support for underbanked micro-retailers |
+| **Track**        | AI and Smart Automation |
 | **Repository**   | Spark_DeepStack                                                                                                                                                                        |
 | **Department**   | Computer Engineering                                                                                                                                                                   |
 
