@@ -1,7 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from app.core.config import settings
+try:
+    from app.core.config import settings
+except ModuleNotFoundError:
+    from app.core.config import settings
 
 engine = create_engine(
     settings.DATABASE_URL,
@@ -24,5 +27,8 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
