@@ -867,7 +867,7 @@ export default function VyaparVoice() {
                         <Loader2 className="w-7 h-7 text-slate-800 animate-spin" />
                       </div>
                     </div>
-                    <h3 className="font-bold text-slate-800 text-base">Gemini NLP Parsing</h3>
+                    <h3 className="font-bold text-slate-800 text-base">Parsing Transaction</h3>
                     <p className="text-slate-500 text-xs mt-1.5 max-w-xs leading-relaxed px-4">
                       Extracting items, identifying actions, and matching against inventory...
                     </p>
