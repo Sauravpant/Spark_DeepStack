@@ -23,8 +23,6 @@ Desktop.ini
 # Environment Variables
 # ============================================================
 .env
-.env.*
-!.env.example
 
 # ============================================================
 # Node / React Frontend
@@ -87,28 +85,6 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 
-# ============================================================
-# ML Models
-# ============================================================
-*.pkl
-*.pickle
-*.joblib
-*.h5
-*.keras
-*.pt
-*.pth
-*.ckpt
-*.onnx
-*.pb
-*.tflite
-
-# Large datasets
-data/
-datasets/
-dataset/
-raw_data/
-processed_data/
-training_data/
 
 # Training outputs
 runs/
@@ -194,3 +170,6 @@ gcloud-service-key.json
 # Keep Empty Folders
 # ============================================================
 !.gitkeep
+
+
+catboost_info/
