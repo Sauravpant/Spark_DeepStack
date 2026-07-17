@@ -60,12 +60,12 @@ export default function Reports() {
     s.total_transactions > 0 ? Math.round(s.total_revenue / s.total_transactions) : 0;
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Reports & Analytics</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Live data from your shop dashboard API
-        </p>
+    <div className="p-8 max-w-7xl mx-auto flex flex-col gap-6">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-[#E3182D]">
+          <BarChart3 className="w-4 h-4" />
+        </span>
+        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h1>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -73,34 +73,34 @@ export default function Reports() {
           title="Total Revenue"
           value={formatCurrency(s.total_revenue)}
           icon={DollarSign}
-          iconBg="bg-emerald-50"
+          iconBg="bg-emerald-50/80"
           iconColor="text-emerald-600"
         />
         <StatCard
           title="Total Profit"
           value={formatCurrency(s.total_profit)}
           icon={TrendingUp}
-          iconBg="bg-blue-50"
+          iconBg="bg-blue-50/80"
           iconColor="text-blue-600"
         />
         <StatCard
           title="Total Orders"
           value={s.total_transactions.toLocaleString()}
           icon={ShoppingCart}
-          iconBg="bg-purple-50"
+          iconBg="bg-purple-50/80"
           iconColor="text-purple-600"
         />
         <StatCard
           title="Avg. Order Value"
           value={formatCurrency(avgOrder)}
           icon={BarChart3}
-          iconBg="bg-amber-50"
+          iconBg="bg-amber-50/80"
           iconColor="text-amber-600"
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <h2 className="text-base font-bold text-slate-900 mb-1">Revenue vs Profit</h2>
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
+        <h2 className="text-base font-bold text-slate-900 tracking-tight mb-1">Revenue vs Profit</h2>
         <p className="text-xs text-slate-400 mb-4">Last 7 days</p>
         {salesTrend.length === 0 ? (
           <EmptyState title="No sales yet" description="Record transactions to see trends." />
@@ -145,8 +145,8 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h2 className="text-base font-bold text-slate-900 mb-4">Revenue by Payment</h2>
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
+          <h2 className="text-base font-bold text-slate-900 tracking-tight mb-4">Revenue by Payment</h2>
           {paymentPie.length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-12">No payment data</p>
           ) : (
@@ -173,8 +173,8 @@ export default function Reports() {
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h2 className="text-base font-bold text-slate-900 mb-4">Top Products</h2>
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
+          <h2 className="text-base font-bold text-slate-900 tracking-tight mb-4">Top Products</h2>
           {(data.top_products ?? []).length === 0 ? (
             <p className="text-sm text-slate-500 text-center py-12">No product sales yet</p>
           ) : (
@@ -198,38 +198,38 @@ export default function Reports() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <h2 className="text-base font-bold text-slate-900 mb-4">Revenue by Category</h2>
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50 overflow-hidden">
+        <h2 className="text-base font-bold text-slate-900 tracking-tight mb-4">Revenue by Category</h2>
         {(data.revenue_by_category ?? []).length === 0 ? (
           <p className="text-sm text-slate-500 text-center py-8">No category revenue yet</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-6">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                <tr className="bg-slate-50/70 border-y border-slate-200/60">
+                  <th className="text-left px-6 py-3.5 text-xs font-bold text-slate-405 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                  <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-405 uppercase tracking-wider">
                     Products
                   </th>
-                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                  <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-405 uppercase tracking-wider">
                     Revenue
                   </th>
-                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                  <th className="text-right px-6 py-3.5 text-xs font-bold text-slate-405 uppercase tracking-wider">
                     Profit
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {data.revenue_by_category.map((c) => (
-                  <tr key={c.category_name}>
-                    <td className="px-4 py-3 font-medium text-slate-800">{c.category_name}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{c.product_count}</td>
-                    <td className="px-4 py-3 text-right font-semibold">
+                  <tr key={c.category_name} className="hover:bg-slate-50/40 transition-colors">
+                    <td className="px-6 py-3.5 font-semibold text-slate-800">{c.category_name}</td>
+                    <td className="px-6 py-3.5 text-right text-slate-600 font-medium">{c.product_count}</td>
+                    <td className="px-6 py-3.5 text-right font-bold text-slate-850">
                       {formatCurrency(c.revenue)}
                     </td>
-                    <td className="px-4 py-3 text-right text-emerald-600">
+                    <td className="px-6 py-3.5 text-right text-emerald-600 font-bold">
                       {formatCurrency(c.profit)}
                     </td>
                   </tr>

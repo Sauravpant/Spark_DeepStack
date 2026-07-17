@@ -114,17 +114,22 @@ export default function Customers() {
   if (isError) return <ErrorState onRetry={refetch} />;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-8 max-w-7xl mx-auto flex flex-col gap-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Manage credit limits, outstanding balances, and customer records
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-[#E3182D]">
+              <Users className="w-4 h-4" />
+            </span>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Customers</h1>
+          </div>
+          <p className="text-sm text-slate-500">
+            Manage credit limits, outstanding balances, and customer records.
           </p>
         </div>
         <Button
           size="sm"
-          className="bg-red-600 hover:bg-red-700 text-white"
+          className="bg-[#E3182D] hover:bg-red-700 text-white shadow-sm transition-all duration-200"
           onClick={() => setDialogOpen(true)}
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -137,44 +142,44 @@ export default function Customers() {
           title="Total Customers"
           value={stats.total.toLocaleString()}
           icon={Users}
-          iconBg="bg-blue-50"
+          iconBg="bg-blue-50/80"
           iconColor="text-blue-600"
         />
         <StatCard
           title="Active Credit"
           value={stats.withCredit.toLocaleString()}
           icon={CreditCard}
-          iconBg="bg-amber-50"
+          iconBg="bg-amber-50/80"
           iconColor="text-amber-600"
         />
         <StatCard
           title="Total Outstanding"
           value={formatCurrency(stats.outstanding)}
           icon={Wallet}
-          iconBg="bg-red-50"
-          iconColor="text-red-600"
+          iconBg="bg-red-50/80"
+          iconColor="text-[#E3182D]"
         />
         <StatCard
           title="Avg Credit Limit"
           value={formatCurrency(stats.avgLimit)}
           icon={CreditCard}
-          iconBg="bg-emerald-50"
+          iconBg="bg-emerald-50/80"
           iconColor="text-emerald-600"
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
+        <div className="p-4 border-b border-slate-200/60 flex items-center justify-between gap-3 flex-wrap bg-slate-50/20">
           <div className="relative flex-1 max-w-sm">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search by name or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
+              className="pl-9 bg-white border-slate-200 focus-visible:ring-red-500/20 focus-visible:border-[#E3182D]"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="bg-slate-100/80 p-0.5 rounded-lg flex gap-1 border border-slate-200/40">
             {(
               [
                 ['all', 'All'],
@@ -182,15 +187,18 @@ export default function Customers() {
                 ['high', 'High Exposure'],
               ] as const
             ).map(([key, label]) => (
-              <Button
+              <button
                 key={key}
-                variant={filter === key ? 'default' : 'ghost'}
-                size="sm"
-                className={filter === key ? 'bg-red-600 hover:bg-red-700 text-white' : ''}
+                className={cn(
+                  'px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-150 cursor-pointer',
+                  filter === key
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/40 font-bold'
+                    : 'text-slate-500 hover:text-slate-900'
+                )}
                 onClick={() => setFilter(key)}
               >
                 {label}
-              </Button>
+              </button>
             ))}
           </div>
         </div>
@@ -204,60 +212,60 @@ export default function Customers() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50/70 border-b border-slate-200/60">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Phone
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Credit Limit
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Exposure
                   </th>
-                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-right px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Outstanding
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Joined
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {filtered.map((c) => (
                   <tr
                     key={c.id}
-                    className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50/50 transition-colors duration-150 cursor-pointer group"
                     onClick={() => setSelectedId(c.id)}
                   >
-                    <td className="px-4 py-3.5">
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8 border border-slate-200">
-                          <AvatarFallback className="bg-red-50 text-red-600 text-xs font-bold">
+                        <Avatar className="w-9 h-9 border border-slate-200">
+                          <AvatarFallback className="bg-red-50 text-[#E3182D] text-xs font-bold">
                             {c.full_name[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">{c.full_name}</p>
-                          <p className="text-xs text-slate-400 font-mono">
+                          <p className="text-sm font-semibold text-slate-800 tracking-tight group-hover:text-[#E3182D] transition-colors">{c.full_name}</p>
+                          <p className="text-[10px] text-slate-400 font-mono">
                             #{c.id.slice(0, 8)}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-slate-600">{c.phone || '—'}</td>
-                    <td className="px-4 py-3.5 text-sm text-slate-700">
+                    <td className="px-6 py-4 text-sm text-slate-600 font-medium">{c.phone || '—'}</td>
+                    <td className="px-6 py-4 text-sm text-slate-700 font-semibold">
                       {formatCurrency(c.credit_limit)}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-6 py-4">
                       <RiskBadge customer={c} />
                     </td>
-                    <td className="px-4 py-3.5 text-right">
+                    <td className="px-6 py-4 text-right">
                       <span
                         className={cn(
-                          'text-sm font-semibold',
+                          'text-sm font-bold',
                           c.current_outstanding_balance > 0
                             ? 'text-red-600'
                             : 'text-emerald-600'
@@ -268,7 +276,7 @@ export default function Customers() {
                           : 'Cleared'}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-slate-500">
+                    <td className="px-6 py-4 text-sm text-slate-500 font-medium">
                       {new Date(c.created_at).toLocaleDateString('en-IN', {
                         day: 'numeric',
                         month: 'short',
@@ -282,8 +290,8 @@ export default function Customers() {
           </div>
         )}
 
-        <div className="p-3 border-t border-slate-100">
-          <p className="text-xs text-slate-500">
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+          <p className="text-xs font-semibold text-slate-400">
             Showing {filtered.length} of {customers?.length ?? 0} customers
           </p>
         </div>

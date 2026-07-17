@@ -25,23 +25,23 @@ export function StatCard({
   const positive = trend !== undefined && trend >= 0;
 
   return (
-    <div className={cn('bg-white rounded-xl border border-slate-200 p-5 shadow-sm', className)}>
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconBg)}>
-          <Icon className={cn('w-4 h-4', iconColor)} />
+    <div className={cn('bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5', className)}>
+      <div className="flex items-start justify-between mb-4">
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
+        <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center transition-colors', iconBg)}>
+          <Icon className={cn('w-4.5 h-4.5', iconColor)} />
         </div>
       </div>
-      <p className="text-2xl font-bold text-slate-900 leading-tight">{value}</p>
+      <p className="text-3xl font-black text-slate-800 tracking-tight leading-tight">{value}</p>
       {(trend !== undefined || subtitle) && (
-        <div className="flex items-center gap-1 mt-1.5">
+        <div className="flex items-center gap-1.5 mt-2">
           {trend !== undefined && (
-            <span className={cn('text-xs font-semibold flex items-center gap-0.5', positive ? 'text-emerald-600' : 'text-red-500')}>
+            <span className={cn('text-xs font-semibold flex items-center gap-0.5 px-1.5 py-0.5 rounded-full', positive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600')}>
               {positive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {Math.abs(trend)}%
             </span>
           )}
-          {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+          {subtitle && <p className="text-xs text-slate-400 font-medium">{subtitle}</p>}
         </div>
       )}
     </div>

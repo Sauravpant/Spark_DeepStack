@@ -157,21 +157,26 @@ export default function Inventory() {
     <div className="flex h-full w-full overflow-hidden">
       <div
         className={cn(
-          'flex-1 flex flex-col p-6 overflow-y-auto transition-all duration-300',
-          selected ? 'pr-6' : ''
+          'flex-1 flex flex-col p-8 overflow-y-auto transition-all duration-300',
+          selected ? 'pr-2' : ''
         )}
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-1">Inventory</h1>
-            <p className="text-slate-500">Manage stock levels, pricing, and product catalog.</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-[#E3182D]">
+                <Package className="w-4 h-4" />
+              </span>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Inventory</h1>
+            </div>
+            <p className="text-sm text-slate-500">Manage stock levels, pricing, and product catalog.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="bg-white" asChild>
+          <div className="flex items-center gap-2.5">
+            <Button variant="outline" className="border-slate-200 hover:bg-slate-50 transition-colors" asChild>
               <Link to={ROUTES.CATEGORIES}>Categories</Link>
             </Button>
             <Button
-              className="gap-2 bg-[#E3182D] hover:bg-red-700 text-white"
+              className="gap-2 bg-[#E3182D] hover:bg-red-700 text-white shadow-sm transition-all duration-200"
               onClick={() => setAddOpen(true)}
             >
               <Plus className="w-4 h-4" /> Add Product
@@ -180,59 +185,70 @@ export default function Inventory() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-4 flex flex-col gap-1">
-              <div className="flex justify-between items-center text-slate-500 mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider">Total Products</span>
+          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
+            <div className="flex justify-between items-center text-slate-500 mb-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
+              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center">
                 <Package className="w-4 h-4 text-slate-400" />
               </div>
-              <span className="text-3xl font-bold text-slate-800">{stats.total}</span>
-            </CardContent>
-          </Card>
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-4 flex flex-col gap-1">
-              <div className="flex justify-between items-center text-slate-500 mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider">Low Stock</span>
+            </div>
+            <span className="text-3xl font-black text-slate-800 tracking-tight leading-tight">{stats.total}</span>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
+            <div className="flex justify-between items-center text-slate-500 mb-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Low Stock</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
               </div>
-              <span className="text-3xl font-bold text-slate-800">{stats.low}</span>
-              <span className="text-xs font-medium text-amber-600">Requires attention</span>
-            </CardContent>
-          </Card>
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-4 flex flex-col gap-1">
-              <div className="flex justify-between items-center text-slate-500 mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider">Out of Stock</span>
-                <XCircle className="w-4 h-4 text-red-500" />
+            </div>
+            <span className="text-3xl font-black text-slate-800 tracking-tight leading-tight">{stats.low}</span>
+            <div className="flex items-center gap-1 mt-1.5">
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                Requires attention
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
+            <div className="flex justify-between items-center text-slate-500 mb-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Out of Stock</span>
+              <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
+                <XCircle className="w-4 h-4 text-[#E3182D]" />
               </div>
-              <span className="text-3xl font-bold text-slate-800">{stats.out}</span>
-            </CardContent>
-          </Card>
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-4 flex flex-col gap-1">
-              <div className="flex justify-between items-center text-slate-500 mb-2">
-                <span className="text-xs font-bold uppercase tracking-wider">Inventory Value</span>
+            </div>
+            <span className="text-3xl font-black text-slate-800 tracking-tight leading-tight">{stats.out}</span>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
+            <div className="flex justify-between items-center text-slate-500 mb-3">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Inventory Value</span>
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
                 <Banknote className="w-4 h-4 text-emerald-600" />
               </div>
-              <span className="text-3xl font-bold text-slate-800">
-                {formatCurrency(stats.value)}
+            </div>
+            <span className="text-3xl font-black text-slate-800 tracking-tight leading-tight">
+              {formatCurrency(stats.value)}
+            </span>
+            <div className="flex items-center gap-1 mt-1.5">
+              <span className="text-[11px] font-semibold text-slate-400">
+                Cost basis
               </span>
-              <span className="text-xs font-medium text-slate-500">Cost basis</span>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
-        <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-4 gap-4 flex-wrap">
-          <div className="flex gap-6">
+        <div className="flex justify-between items-center mb-5 border-b border-slate-200/60 pb-4 gap-4 flex-wrap">
+          <div className="bg-slate-100/85 p-0.5 rounded-lg flex gap-1 border border-slate-200/40">
             {['All Products', 'Low Stock', 'Out of Stock'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
-                  'text-sm font-semibold pb-4 -mb-4 border-b-2 transition-colors',
+                  'px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all duration-150 cursor-pointer',
                   activeTab === tab
-                    ? 'border-red-600 text-slate-900'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                    ? 'bg-white text-slate-900 shadow-sm border border-slate-200/40 font-bold'
+                    : 'text-slate-500 hover:text-slate-900'
                 )}
               >
                 {tab}
@@ -243,11 +259,11 @@ export default function Inventory() {
             placeholder="Search products..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-56"
+            className="w-60 bg-white border-slate-200 focus-visible:ring-red-500/20 focus-visible:border-[#E3182D]"
           />
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 shadow-sm flex-1 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm flex-1 overflow-hidden flex flex-col transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
           {filtered.length === 0 ? (
             <EmptyState
               title="No products found"
@@ -256,19 +272,19 @@ export default function Inventory() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
-                <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                <thead className="text-xs text-slate-450 uppercase bg-slate-50/70 border-b border-slate-200/60">
                   <tr>
-                    <th className="px-4 py-3 font-semibold">Product</th>
-                    <th className="px-4 py-3 font-semibold">SKU</th>
-                    <th className="px-4 py-3 font-semibold">Category</th>
-                    <th className="px-4 py-3 font-semibold text-right">Stock</th>
-                    <th className="px-4 py-3 font-semibold text-right">Reorder</th>
-                    <th className="px-4 py-3 font-semibold text-right">Cost</th>
-                    <th className="px-4 py-3 font-semibold text-right">Price</th>
-                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider">Product</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider">SKU</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider">Category</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-right">Stock</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-right">Reorder</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-right">Cost</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider text-right">Price</th>
+                    <th className="px-6 py-4 font-bold text-slate-400 tracking-wider">Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                   {filtered.map((item) => {
                     const status = stockStatus(item);
                     return (
@@ -276,47 +292,49 @@ export default function Inventory() {
                         key={item.id}
                         onClick={() => setSelectedId(item.id)}
                         className={cn(
-                          'border-b border-slate-100 transition-colors cursor-pointer',
-                          selectedId === item.id ? 'bg-red-50/50' : 'hover:bg-slate-50'
+                          'transition-colors duration-150 cursor-pointer group',
+                          selectedId === item.id 
+                            ? 'bg-red-50/40 hover:bg-red-50/50' 
+                            : 'hover:bg-slate-50/50'
                         )}
                       >
-                        <td className="px-4 py-4">
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-3 min-w-[200px]">
-                            <div className="w-10 h-10 rounded bg-slate-100 flex items-center justify-center shrink-0">
-                              <Package className="w-5 h-5 text-slate-400" />
+                            <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 group-hover:bg-red-50 group-hover:text-red-500 group-hover:border-red-100/50 transition-colors">
+                              <Package className="w-4.5 h-4.5 text-slate-400" />
                             </div>
-                            <p className="font-semibold text-slate-800">{item.product_name}</p>
+                            <p className="font-semibold text-slate-800 tracking-tight">{item.product_name}</p>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-slate-500 font-mono text-xs">{item.sku}</td>
-                        <td className="px-4 py-4">
-                          <span className="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-md text-xs font-medium">
+                        <td className="px-6 py-4 text-slate-500 font-mono text-xs">{item.sku}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-2.5 py-1 bg-slate-100/80 text-slate-650 rounded-md text-xs font-semibold border border-slate-200/20">
                             {categoryMap.get(item.category_id) ?? '—'}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-right font-semibold text-slate-800">
+                        <td className="px-6 py-4 text-right font-semibold text-slate-850">
                           {item.stock_quantity} {item.unit}
                         </td>
-                        <td className="px-4 py-4 text-right text-slate-500">{item.reorder_level}</td>
-                        <td className="px-4 py-4 text-right text-slate-500">
+                        <td className="px-6 py-4 text-right text-slate-500 font-medium">{item.reorder_level}</td>
+                        <td className="px-6 py-4 text-right text-slate-500 font-semibold">
                           {formatCurrency(item.cost_price)}
                         </td>
-                        <td className="px-4 py-4 text-right font-medium text-slate-900">
+                        <td className="px-6 py-4 text-right font-bold text-slate-900">
                           {formatCurrency(item.selling_price)}
                         </td>
-                        <td className="px-4 py-4">
+                        <td className="px-6 py-4">
                           {status === 'In Stock' && (
-                            <Badge className="bg-emerald-100 text-emerald-700 border-0 font-semibold">
+                            <Badge className="bg-emerald-100 text-emerald-700 border-0 font-semibold shadow-none rounded-md px-2.5 py-0.5 text-xs">
                               In Stock
                             </Badge>
                           )}
                           {status === 'Low Stock' && (
-                            <Badge className="bg-amber-100 text-amber-700 border-0 font-semibold">
+                            <Badge className="bg-amber-100 text-amber-700 border-0 font-semibold shadow-none rounded-md px-2.5 py-0.5 text-xs">
                               Low Stock
                             </Badge>
                           )}
                           {status === 'Out of Stock' && (
-                            <Badge className="bg-red-100 text-red-700 border-0 font-semibold">
+                            <Badge className="bg-red-100 text-red-700 border-0 font-semibold shadow-none rounded-md px-2.5 py-0.5 text-xs">
                               Out of Stock
                             </Badge>
                           )}
@@ -328,8 +346,8 @@ export default function Inventory() {
               </table>
             </div>
           )}
-          <div className="flex items-center justify-between p-4 border-t border-slate-200 bg-slate-50 mt-auto">
-            <span className="text-sm text-slate-500">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/30 mt-auto">
+            <span className="text-xs font-bold text-slate-400">
               Showing {filtered.length} of {products?.length ?? 0} products
             </span>
           </div>
@@ -337,26 +355,26 @@ export default function Inventory() {
       </div>
 
       {selected && (
-        <div className="w-96 bg-white border-l border-slate-200 flex flex-col flex-shrink-0">
-          <div className="flex items-center justify-between p-4 border-b border-slate-200">
-            <h2 className="font-bold text-lg text-slate-800">Product Details</h2>
+        <div className="w-[400px] bg-white border-l border-slate-200/80 flex flex-col flex-shrink-0 shadow-xl transition-all duration-300">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-150">
+            <h2 className="font-bold text-lg text-slate-900 tracking-tight">Product Details</h2>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSelectedId(null)}
-              className="text-slate-400 hover:text-slate-800"
+              className="text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md"
             >
               <X className="w-5 h-5" />
             </Button>
           </div>
 
           <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
-            <div className="flex gap-4 items-start">
-              <div className="w-16 h-16 rounded-md bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                <Package className="w-8 h-8 text-slate-300" />
+            <div className="flex gap-4 items-start pb-5 border-b border-slate-100">
+              <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                <Package className="w-8 h-8 text-slate-350" />
               </div>
-              <div>
-                <h3 className="font-bold text-slate-900 leading-tight mb-1">
+              <div className="space-y-1">
+                <h3 className="font-bold text-slate-900 leading-tight">
                   {selected.product_name}
                 </h3>
                 <p className="text-xs text-slate-500 font-mono mb-2">SKU: {selected.sku}</p>

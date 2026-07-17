@@ -323,7 +323,7 @@ export default function CreditRisk() {
             {/* ── Score card + actions ── */}
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Score ring + summary */}
-              <Card className="flex-1 border-slate-200 shadow-sm p-8 flex flex-col md:flex-row items-center gap-8 bg-white">
+              <Card className="flex-1 bg-white rounded-xl border border-slate-200/80 p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
                 <div className="flex flex-col items-center justify-center shrink-0">
                   <div className="relative w-32 h-32 flex items-center justify-center">
                     <svg className="absolute w-full h-full transform -rotate-90">
@@ -476,9 +476,9 @@ export default function CreditRisk() {
 
             {/* ── 3 KPI cards ── */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="bg-white rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
                 <CardContent className="p-6">
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                     Suggested Limit
                   </p>
                   <div className="text-3xl font-black text-[#E3182D] mb-4 tracking-tight">
@@ -491,9 +491,9 @@ export default function CreditRisk() {
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="bg-white rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
                 <CardContent className="p-6">
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                     Repayment Probability
                   </p>
                   <div className="text-4xl font-black text-slate-800 tracking-tight mb-4">
@@ -503,7 +503,7 @@ export default function CreditRisk() {
                     <div
                       className={cn(
                         'h-full rounded-full',
-                        repayProb! >= 70 ? 'bg-emerald-600' : repayProb! >= 40 ? 'bg-amber-500' : 'bg-red-600'
+                        repayProb! >= 70 ? 'bg-emerald-650' : repayProb! >= 40 ? 'bg-amber-500' : 'bg-red-600'
                       )}
                       style={{ width: `${repayProb}%` }}
                     />
@@ -511,9 +511,9 @@ export default function CreditRisk() {
                 </CardContent>
               </Card>
 
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="bg-white rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
                 <CardContent className="p-6">
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                     Outstanding Amount
                   </p>
                   <div className="text-2xl font-black text-slate-800 tracking-tight mb-4">
@@ -529,7 +529,7 @@ export default function CreditRisk() {
             {/* ── SHAP breakdown ── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Protective drivers (negative SHAP = reduce risk) */}
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="bg-white rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6 text-lg">
                     <TrendingUp className="w-5 h-5 text-emerald-500" /> Protective Drivers
@@ -553,10 +553,10 @@ export default function CreditRisk() {
               </Card>
 
               {/* Risk drivers (positive SHAP = increase risk) */}
-              <Card className="border-slate-200 shadow-sm">
+              <Card className="bg-white rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
                 <CardContent className="p-6">
                   <h3 className="font-bold text-slate-800 flex items-center gap-2 mb-6 text-lg">
-                    <AlertTriangle className="w-5 h-5 text-red-500" /> Risk Drivers
+                    <AlertTriangle className="w-5 h-5 text-[#E3182D]" /> Risk Drivers
                   </h3>
                   <div className="flex flex-col gap-5">
                     {(explanation.top_positive_features ?? []).length === 0 ? (
@@ -580,27 +580,27 @@ export default function CreditRisk() {
             {/* ── Feature contributions heat table ── */}
             {explanation.feature_contributions &&
               Object.keys(explanation.feature_contributions).length > 0 && (
-                <Card className="border-slate-200 shadow-sm">
+                <Card className="bg-white rounded-xl border border-slate-200/80 shadow-sm transition-all duration-300 hover:shadow-md hover:shadow-slate-100/60 hover:-translate-y-0.5">
                   <CardContent className="p-6">
-                    <h3 className="font-bold text-slate-800 mb-4 text-base">
+                    <h3 className="font-bold text-slate-850 mb-4 text-base tracking-tight">
                       All Feature Contributions (SHAP values)
                     </h3>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="bg-slate-50 border-b border-slate-100">
-                            <th className="text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase">
+                          <tr className="bg-slate-50/70 border-b border-slate-200/60">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
                               Feature
                             </th>
-                            <th className="text-right px-3 py-2 text-xs font-bold text-slate-500 uppercase">
+                            <th className="text-right px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
                               SHAP Value
                             </th>
-                            <th className="text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase w-40">
+                            <th className="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider w-40">
                               Impact
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-slate-100">
                           {Object.entries(explanation.feature_contributions)
                             .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
                             .map(([feat, val]) => {
@@ -609,20 +609,20 @@ export default function CreditRisk() {
                               );
                               const pct = maxAll > 0 ? (Math.abs(val) / maxAll) * 100 : 0;
                               return (
-                                <tr key={feat} className="hover:bg-slate-50/50">
-                                  <td className="px-3 py-2 text-slate-700 font-medium">
+                                <tr key={feat} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-4 py-3 text-slate-700 font-semibold tracking-tight">
                                     {featureLabel(feat)}
                                   </td>
                                   <td
                                     className={cn(
-                                      'px-3 py-2 text-right font-mono text-xs font-bold',
-                                      val > 0 ? 'text-red-600' : 'text-emerald-600'
+                                      'px-4 py-3 text-right font-mono text-xs font-bold',
+                                      val > 0 ? 'text-red-650' : 'text-emerald-600'
                                     )}
                                   >
                                     {val > 0 ? '+' : ''}
                                     {val.toFixed(4)}
                                   </td>
-                                  <td className="px-3 py-2">
+                                  <td className="px-4 py-3">
                                     <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                                       <div
                                         className={cn(

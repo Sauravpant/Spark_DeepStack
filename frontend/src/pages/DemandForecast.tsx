@@ -222,17 +222,14 @@ export default function DemandForecast() {
           icon={AlertTriangle}
           iconBg="bg-amber-50"
           iconColor="text-amber-600"
-        />
-      </div>
-
-      {/* ── Forecast chart ── */}
+       {/* ── Forecast chart ── */}
       {forecastLoading ? (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-16 flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-16 flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#E3182D]" />
           <p className="text-sm text-slate-500">Generating 7-day forecast...</p>
         </div>
       ) : forecastError ? (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center space-y-3">
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-12 text-center space-y-3">
           <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
           <p className="font-semibold text-slate-800">Forecast unavailable</p>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
@@ -241,7 +238,7 @@ export default function DemandForecast() {
           </p>
           <Button
             onClick={() => refetchForecast()}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-[#E3182D] hover:bg-red-700 text-white"
           >
             Retry
           </Button>
@@ -249,9 +246,9 @@ export default function DemandForecast() {
       ) : (
         <>
           {/* ── 7-day area chart ── */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
             <div className="mb-5">
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">
                 Next 7 Days — {selected?.product_name}
               </h2>
               <p className="text-xs text-slate-400">
@@ -294,8 +291,8 @@ export default function DemandForecast() {
           {/* ── Daily breakdown + SHAP explanation from forecast ── */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Bar chart */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h2 className="text-base font-bold text-slate-900 mb-4">Daily Breakdown</h2>
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
+              <h2 className="text-base font-bold text-slate-900 mb-4 tracking-tight">Daily Breakdown</h2>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -308,55 +305,59 @@ export default function DemandForecast() {
             </div>
 
             {/* Forecast detail table */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-              <h2 className="text-base font-bold text-slate-900 mb-4">Forecast Details</h2>
-              <div className="space-y-2">
-                {chartData.map((d) => (
-                  <div
-                    key={d.date}
-                    className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0"
-                  >
-                    <span className="text-sm text-slate-600">{d.date}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-slate-900">
-                        {d.units} units
-                      </span>
-                      <Badge
-                        className={cn(
-                          'text-[10px] border-0',
-                          d.confidence >= 70
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-amber-100 text-amber-700'
-                        )}
-                      >
-                        {d.confidence}% conf
-                      </Badge>
+            <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50 flex flex-col justify-between">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 mb-4 tracking-tight">Forecast Details</h2>
+                <div className="space-y-1 divide-y divide-slate-100">
+                  {chartData.map((d) => (
+                    <div
+                      key={d.date}
+                      className="flex items-center justify-between py-2.5"
+                    >
+                      <span className="text-sm font-semibold text-slate-655">{d.date}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-slate-900">
+                          {d.units} units
+                        </span>
+                        <Badge
+                          className={cn(
+                            'text-[10px] border-0 px-2 py-0.5 shadow-none font-semibold rounded-md',
+                            d.confidence >= 70
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-amber-100 text-amber-700'
+                          )}
+                        >
+                          {d.confidence}% conf
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
               {selected && totalPredicted > selected.stock_quantity && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg text-sm text-amber-800 flex gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                  Predicted 7-day demand ({totalPredicted.toFixed(0)}) exceeds current stock (
-                  {selected.stock_quantity}). Consider restocking.
+                <div className="mt-4 p-3 bg-amber-55/40 border border-amber-200/60 rounded-xl text-xs font-semibold text-amber-800 flex gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                  <span>
+                    Predicted 7-day demand ({totalPredicted.toFixed(0)}) exceeds current stock (
+                    {selected.stock_quantity}). Consider restocking.
+                  </span>
                 </div>
               )}
             </div>
           </div>
 
           {/* ── SHAP Explanation Panel (from /explain-next-7-days via per-product backend) ── */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
             <button
               onClick={() => setShowExplain((v) => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+              className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-red-600" />
+                <Sparkles className="w-4 h-4 text-[#E3182D]" />
                 <span className="font-bold text-sm text-slate-900">
                   AI Explanation — What Drives This Forecast?
                 </span>
-                <Badge className="bg-red-50 text-red-600 border-red-200 border text-[10px] h-auto px-2">
+                <Badge className="bg-red-50 text-[#E3182D] border-red-200 border text-[10px] h-auto px-2">
                   SHAP
                 </Badge>
               </div>
@@ -368,7 +369,7 @@ export default function DemandForecast() {
             </button>
 
             {showExplain && (
-              <div className="px-5 pb-5 border-t border-slate-100">
+              <div className="px-6 pb-6 border-t border-slate-100">
                 <p className="text-xs text-slate-500 mt-4 mb-5">
                   The confidence score in each forecast day reflects how strongly the model
                   signals demand. Factors like lag sales, rolling averages, festival proximity,
@@ -377,7 +378,7 @@ export default function DemandForecast() {
                 </p>
 
                 {/* Confidence trend */}
-                <h3 className="text-sm font-bold text-slate-800 mb-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
                   Model Confidence Per Day
                 </h3>
                 <ResponsiveContainer width="100%" height={150}>
@@ -398,53 +399,53 @@ export default function DemandForecast() {
                 </ResponsiveContainer>
 
                 {/* Key demand drivers info */}
-                <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-red-50 rounded-lg p-4 border border-red-100">
-                    <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-red-50/40 rounded-xl p-4 border border-red-100/50">
+                    <h4 className="text-xs font-bold text-red-750 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5" /> Demand Boosters
                     </h4>
-                    <ul className="space-y-1.5 text-xs text-slate-700">
+                    <ul className="space-y-2 text-xs text-slate-650 font-medium">
                       {selected?.is_staple && (
                         <li className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
                           Staple product — steady baseline demand
                         </li>
                       )}
                       {selected?.is_perishable && (
                         <li className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
                           Perishable — frequent restock pattern
                         </li>
                       )}
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
                         Recent lag sales (lag_1, lag_7, lag_14)
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
                         Rolling 7-day average — recent trend signal
                       </li>
                     </ul>
                   </div>
-                  <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
-                    <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100">
+                    <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                       <Info className="w-3.5 h-3.5" /> Model Context
                     </h4>
-                    <ul className="space-y-1.5 text-xs text-slate-700">
+                    <ul className="space-y-2 text-xs text-slate-655 font-medium">
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
                         Location: {activeShop?.location_type ?? '—'}
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
                         Model: {modelName}
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                         Day-of-week &amp; rolling 21-day avg
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                         Festival proximity features
                       </li>
                     </ul>
@@ -455,10 +456,10 @@ export default function DemandForecast() {
           </div>
 
           {/* ── Global Feature Importance ── */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
             <button
               onClick={() => setShowGlobal((v) => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+              className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
@@ -477,10 +478,10 @@ export default function DemandForecast() {
             </button>
 
             {showGlobal && (
-              <div className="px-5 pb-5 border-t border-slate-100">
+              <div className="px-6 pb-6 border-t border-slate-100">
                 {globalLoading ? (
                   <div className="flex items-center justify-center py-10 gap-3">
-                    <Loader2 className="w-5 h-5 animate-spin text-red-600" />
+                    <Loader2 className="w-5 h-5 animate-spin text-[#E3182D]" />
                     <span className="text-sm text-slate-500">Loading feature importance...</span>
                   </div>
                 ) : globalEntries.length === 0 ? (
@@ -523,6 +524,13 @@ export default function DemandForecast() {
                   </>
                 )}
               </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}  </div>
             )}
           </div>
         </>

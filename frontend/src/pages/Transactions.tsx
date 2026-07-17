@@ -267,17 +267,22 @@ export default function Transactions() {
   if (isError) return <ErrorState onRetry={refetch} />;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-8 max-w-7xl mx-auto flex flex-col gap-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Record sales and track cash, QR, and credit payments
+          <div className="flex items-center gap-2 mb-1">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-[#E3182D]">
+              <Receipt className="w-4 h-4" />
+            </span>
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Transactions</h1>
+          </div>
+          <p className="text-sm text-slate-500">
+            Record sales and track cash, QR, and credit payments.
           </p>
         </div>
         <Button
           size="sm"
-          className="bg-red-600 hover:bg-red-700 text-white"
+          className="bg-[#E3182D] hover:bg-red-700 text-white shadow-sm transition-all duration-200"
           onClick={() => setSaleOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           New Sale
@@ -289,70 +294,69 @@ export default function Transactions() {
           title="Today's Sales"
           value={formatCurrency(stats.todaySales)}
           icon={TrendingUp}
-          iconBg="bg-emerald-50"
+          iconBg="bg-emerald-50/80"
           iconColor="text-emerald-600"
         />
         <StatCard
           title="All Sales"
           value={formatCurrency(stats.totalSales)}
           icon={ShoppingCart}
-          iconBg="bg-blue-50"
+          iconBg="bg-blue-50/80"
           iconColor="text-blue-600"
         />
         <StatCard
           title="Credit Sales"
           value={formatCurrency(stats.creditSales)}
           icon={CreditCard}
-          iconBg="bg-purple-50"
-          iconColor="text-purple-600"
+          iconBg="bg-red-50/80"
+          iconColor="text-[#E3182D]"
         />
         <StatCard
           title="Pending Credit"
           value={formatCurrency(stats.pending)}
           icon={Clock}
-          iconBg="bg-amber-50"
+          iconBg="bg-amber-50/80"
           iconColor="text-amber-600"
         />
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="h-9">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="cash">Cash</TabsTrigger>
-              <TabsTrigger value="qr">QR</TabsTrigger>
-              <TabsTrigger value="credit">Credit Sales</TabsTrigger>
-              <TabsTrigger value="khata">Khata</TabsTrigger>
+      <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md hover:shadow-slate-100/50">
+        <div className="p-4 border-b border-slate-200/60 flex items-center justify-between gap-4 flex-wrap bg-slate-50/20">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+            <TabsList className="h-9 border border-slate-200/40 p-0.5 rounded-lg bg-slate-100/80">
+              <TabsTrigger value="all" className="text-xs font-semibold px-3 py-1 cursor-pointer">All</TabsTrigger>
+              <TabsTrigger value="cash" className="text-xs font-semibold px-3 py-1 cursor-pointer">Cash</TabsTrigger>
+              <TabsTrigger value="qr" className="text-xs font-semibold px-3 py-1 cursor-pointer">QR</TabsTrigger>
+              <TabsTrigger value="credit" className="text-xs font-semibold px-3 py-1 cursor-pointer">Credit Sales</TabsTrigger>
+              <TabsTrigger value="khata" className="text-xs font-semibold px-3 py-1 cursor-pointer">Khata</TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="relative">
+          <div className="relative flex-grow sm:flex-grow-0">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search transactions..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 w-60"
+              className="pl-9 w-full sm:w-60 bg-white border-slate-200 focus-visible:ring-red-500/20 focus-visible:border-[#E3182D]"
             />
           </div>
         </div>
 
         {activeTab === "khata" ?
-          <div className="p-4 space-y-4">
-            <div className="flex gap-2">
+          <div className="p-0 space-y-0">
+            <div className="p-4 border-b border-slate-100 bg-slate-50/30 flex gap-2">
               {(["all", "unpaid", "overdue", "paid"] as const).map((s) => (
-                <Button
+                <button
                   key={s}
-                  size="sm"
-                  variant={creditFilter === s ? "default" : "outline"}
-                  className={
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-bold rounded-md transition-all cursor-pointer border",
                     creditFilter === s ?
-                      "bg-red-600 hover:bg-red-700 text-white"
-                    : ""
-                  }
+                      "bg-white border-slate-300 text-slate-900 shadow-xs"
+                    : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                  )}
                   onClick={() => setCreditFilter(s)}>
                   {s === "all" ? "All Open" : s}
-                </Button>
+                </button>
               ))}
             </div>
             {(() => {
@@ -370,65 +374,67 @@ export default function Transactions() {
                 );
               }
               return (
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-100">
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">
-                        Amount
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">
-                        Due
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">
-                        Status
-                      </th>
-                      <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {rows.map((sale) => (
-                      <tr key={sale.id}>
-                        <td className="px-4 py-3 font-semibold text-slate-800">
-                          {formatCurrency(Number(sale.credit_amount))}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {sale.due_date}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge
-                            className={cn("border-0 capitalize", {
-                              "bg-amber-100 text-amber-700":
-                                sale.status === "unpaid",
-                              "bg-red-100 text-red-700":
-                                sale.status === "overdue",
-                              "bg-emerald-100 text-emerald-700":
-                                sale.status === "paid",
-                            })}>
-                            {sale.status}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {sale.status !== "paid" && (
-                            <Button
-                              size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                              disabled={updateCredit.isPending}
-                              onClick={() =>
-                                updateCredit.mutate({
-                                  creditSaleId: sale.id,
-                                  payload: { status: "paid" },
-                                })
-                              }>
-                              Mark Paid
-                            </Button>
-                          )}
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-slate-50/70 border-b border-slate-200/60">
+                        <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                          Due
+                        </th>
+                        <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="text-right px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                          Action
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {rows.map((sale) => (
+                        <tr key={sale.id} className="hover:bg-slate-50/50 transition-colors duration-150">
+                          <td className="px-6 py-4 font-bold text-slate-800">
+                            {formatCurrency(Number(sale.credit_amount))}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-650 font-medium">
+                            {sale.due_date}
+                          </td>
+                          <td className="px-6 py-4">
+                            <Badge
+                              className={cn("border-0 capitalize rounded-md shadow-none px-2.5 py-0.5 text-xs font-semibold", {
+                                "bg-amber-100 text-amber-700":
+                                  sale.status === "unpaid",
+                                "bg-red-100 text-red-700":
+                                  sale.status === "overdue",
+                                "bg-emerald-100 text-emerald-700":
+                                  sale.status === "paid",
+                              })}>
+                              {sale.status}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            {sale.status !== "paid" && (
+                              <Button
+                                size="sm"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm transition-all"
+                                disabled={updateCredit.isPending}
+                                onClick={() =>
+                                  updateCredit.mutate({
+                                    creditSaleId: sale.id,
+                                    payload: { status: "paid" },
+                                  })
+                                }>
+                                Mark Paid
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               );
             })()}
           </div>
@@ -440,68 +446,70 @@ export default function Transactions() {
         : <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr className="bg-slate-50/70 border-b border-slate-200/60">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     ID
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Method
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-right px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-4 py-3" />
+                  <th className="px-6 py-4" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {filtered.map((t) => (
                   <tr
                     key={t.id}
-                    className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+                    className="hover:bg-slate-50/50 transition-colors duration-150 cursor-pointer group"
                     onClick={() => setSelectedId(t.id)}>
-                    <td className="px-4 py-3.5 font-mono text-xs text-slate-500">
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500">
                       #{t.id.slice(0, 8)}
                     </td>
-                    <td className="px-4 py-3.5 text-sm font-medium text-slate-800">
+                    <td className="px-6 py-4 text-sm font-semibold text-slate-800 tracking-tight group-hover:text-[#E3182D] transition-colors">
                       {t.customer_id ?
                         (customerMap.get(t.customer_id) ?? "Customer")
                       : "Walk-in"}
                     </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                        <MethodIcon method={t.payment_type} />
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2 text-sm text-slate-650 font-medium">
+                        <span className="w-6 h-6 rounded bg-slate-50 flex items-center justify-center border border-slate-150">
+                          <MethodIcon method={t.payment_type} />
+                        </span>
                         {paymentLabel(t.payment_type)}
                       </div>
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-6 py-4">
                       <TransactionTypeBadge tx={t} />
                     </td>
-                    <td className="px-4 py-3.5 text-right text-sm font-bold text-emerald-600">
+                    <td className="px-6 py-4 text-right text-sm font-bold text-slate-850">
                       {formatCurrency(Number(t.total_amount))}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-6 py-4">
                       <StatusBadge tx={t} />
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-slate-500">
+                    <td className="px-6 py-4 text-sm text-slate-500 font-medium">
                       {formatKathmanduDateTime(t.created_at)}
                     </td>
-                    <td className="px-4 py-3.5">
+                    <td className="px-6 py-4">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="text-slate-400 hover:text-slate-700 h-7 px-2">
+                        size="icon"
+                        className="text-slate-400 hover:text-slate-700 h-8 w-8 hover:bg-slate-100 rounded-md">
                         <Receipt className="w-3.5 h-3.5" />
                       </Button>
                     </td>
@@ -512,8 +520,8 @@ export default function Transactions() {
           </div>
         }
 
-        <div className="p-3 border-t border-slate-100">
-          <p className="text-xs text-slate-500">
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30">
+          <p className="text-xs font-semibold text-slate-450">
             Showing {filtered.length} of {transactions?.length ?? 0}{" "}
             transactions
           </p>
