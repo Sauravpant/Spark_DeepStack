@@ -44,7 +44,7 @@ from app.services import product_service, transaction_service, customer_service
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.5-flash"
 TTS_VOICE = "ne-NP-SagarNeural"
 
 # --- Audio preprocessing tuning ---
@@ -85,6 +85,39 @@ def _get_ai_client():
         os.environ.setdefault("GEMINI_API_KEY", settings.GEMINI_API_KEY)
         _ai_client = genai.Client()
     return _ai_client
+
+
+def sanitize_extracted_response(
+    *,
+    items: list[VoiceLineItem],
+    customer_name: Optional[str] = None,
+    payment_type: Optional[str] = "cash",
+    notes: Optional[str] = None,
+    transactions: Optional[list[VoiceTransactionEntry]] = None,
+    raw_transcript: Optional[str] = None,
+) -> VoiceExtractResponse:
+    """Strip any credit/customer inference from voice extraction results."""
+    sanitized_transactions = []
+    for tx in transactions or []:
+        sanitized_transactions.append(
+            VoiceTransactionEntry(
+                action=tx.action,
+                items=tx.items,
+                customer_name=None,
+                payment_type="cash",
+                due_date=None,
+                notes=None,
+            )
+        )
+
+    return VoiceExtractResponse(
+        items=items,
+        customer_name=None,
+        payment_type="cash",
+        notes=None,
+        transactions=sanitized_transactions or None,
+        raw_transcript=raw_transcript,
+    )
 
 
 async def synthesize_speech(text: str) -> bytes:
@@ -283,8 +316,8 @@ async def extract_transactions(
     catalog = _product_catalog_lines(products)
 
     prompt = f"""You are a transaction extraction assistant for a Nepali kirana (grocery) shop.
-Analyze the spoken Nepali input and extract ALL transaction line items mentioned.
-A single sentence may contain MULTIPLE transaction entries (sales and/or purchases), potentially involving different customers or payment types.
+Analyze the spoken Nepali input and extract transaction line items only.
+A single sentence may contain multiple transaction entries (sales and/or purchases).
 
 ### Shop product catalog (prefer matching these names when possible):
 {catalog}
@@ -294,120 +327,12 @@ A single sentence may contain MULTIPLE transaction entries (sales and/or purchas
 - action "purchase" = किन्यो, किने, खरिद, stock in, थपियो, ल्याए
 - quantity must be numeric (convert Nepali words: एक=1, दुई=2, तीन=3, चार=4, पाँच=5, छ=6, सात=7, आठ=8, नौ=9, दस=10, दश=10)
 - product: use catalog name if match exists, else keep spoken Nepali/English name
-- If credit/उधारो/बाँकी mentioned, payment_type is "credit", otherwise "cash".
-- If a customer name is spoken (e.g. राम, श्याम, हरि), capture it as customer_name.
-- If the input contains multiple separate transactions (e.g. one sale to Ram on credit, one purchase/stock-in, or another sale to Hari), split them into separate transaction objects in the `transactions` array.
-- For backward compatibility, also populate the root `items`, `customer_name`, `payment_type`, and `notes` with a combined list of all items and the main customer/payment type.
+- Do not infer credit status, due dates, or customer names from the speech. Ignore words like उधारो, बाँकी, and any person names.
+- Always return payment_type as "cash" and customer_name as null.
+- If the input contains multiple separate transactions, split them into separate transaction objects in the `transactions` array.
+- For backward compatibility, also populate the root `items`, `customer_name`, `payment_type`, and `notes` with the combined list of items and default values.
 
-### Examples:
-
-Example 1 (Single sale item, cash):
-Input: "कोक पाँच वटा बेचियो"
-Output json:
-{{
-  "items": [{{"action":"sale","product":"Coca Cola 2L","quantity":5,"unit":"वटा"}}],
-  "customer_name": null,
-  "payment_type": "cash",
-  "notes": "Single sale",
-  "transactions": [
-    {{
-      "action": "sale",
-      "items": [{{"action":"sale","product":"Coca Cola 2L","quantity":5,"unit":"वटा"}}],
-      "customer_name": null,
-      "payment_type": "cash",
-      "due_date": null,
-      "notes": "Sale"
-    }}
-  ]
-}}
-
-Example 2 (Multiple items in a single sale, credit):
-Input: "रामलाई पाँच वटा कोक र दुई वटा चामल उधारोमा दिएँ"
-Output json:
-{{
-  "items": [
-    {{"action":"sale","product":"Coca Cola 2L","quantity":5,"unit":"वटा"}},
-    {{"action":"sale","product":"Basmati Rice 5kg","quantity":2,"unit":"किलो"}}
-  ],
-  "customer_name": "राम",
-  "payment_type": "credit",
-  "notes": "Credit sale to राम",
-  "transactions": [
-    {{
-      "action": "sale",
-      "items": [
-        {{"action":"sale","product":"Coca Cola 2L","quantity":5,"unit":"वटा"}},
-        {{"action":"sale","product":"Basmati Rice 5kg","quantity":2,"unit":"किलो"}}
-      ],
-      "customer_name": "राम",
-      "payment_type": "credit",
-      "due_date": null,
-      "notes": "Credit sale"
-    }}
-  ]
-}}
-
-Example 3 (Multiple transaction entries - sale and purchase mixed):
-Input: "हरिलाई दुई वटा कोक बेचियो र दूध तीन लिटर थपियो"
-Output json:
-{{
-  "items": [
-    {{"action":"sale","product":"Coca Cola 2L","quantity":2,"unit":"वटा"}},
-    {{"action":"purchase","product":"Fresh Milk 1L","quantity":3,"unit":"लिटर"}}
-  ],
-  "customer_name": "हरी",
-  "payment_type": "cash",
-  "notes": "Mixed sale and purchase",
-  "transactions": [
-    {{
-      "action": "sale",
-      "items": [{{"action":"sale","product":"Coca Cola 2L","quantity":2,"unit":"वटा"}}],
-      "customer_name": "हरी",
-      "payment_type": "cash",
-      "due_date": null,
-      "notes": "Sale to हरी"
-    }},
-    {{
-      "action": "purchase",
-      "items": [{{"action":"purchase","product":"Fresh Milk 1L","quantity":3,"unit":"लिटर"}}],
-      "customer_name": null,
-      "payment_type": "cash",
-      "due_date": null,
-      "notes": "Purchase/Stock-in"
-    }}
-  ]
-}}
-
-Example 4 (Multiple transaction entries - two different sales to different customers):
-Input: "रामलाई ३ वटा कोक उधारोमा दिएँ र श्यामलाई २ वटा चाउचाउ नगदमा बेचियो"
-Output json:
-{{
-  "items": [
-    {{"action":"sale","product":"Coca Cola 2L","quantity":3,"unit":"वटा"}},
-    {{"action":"sale","product":"Wai Wai Noodles","quantity":2,"unit":"वटा"}}
-  ],
-  "customer_name": "राम",
-  "payment_type": "credit",
-  "notes": "Multiple sales",
-  "transactions": [
-    {{
-      "action": "sale",
-      "items": [{{"action":"sale","product":"Coca Cola 2L","quantity":3,"unit":"वटा"}}],
-      "customer_name": "राम",
-      "payment_type": "credit",
-      "due_date": null,
-      "notes": "Credit sale to राम"
-    }},
-    {{
-      "action": "sale",
-      "items": [{{"action":"sale","product":"Wai Wai Noodles","quantity":2,"unit":"वटा"}}],
-      "customer_name": "श्याम",
-      "payment_type": "cash",
-      "due_date": null,
-      "notes": "Cash sale to श्याम"
-    }}
-  ]
-}}
+Return JSON only.
 
 Input: "{text}"
 """
@@ -433,10 +358,10 @@ Input: "{text}"
         if not response.parsed:
             raise ValueError("Empty Gemini response")
         parsed: ExtractResult = response.parsed
-        return VoiceExtractResponse(
+        return sanitize_extracted_response(
             items=parsed.items,
             customer_name=parsed.customer_name,
-            payment_type=parsed.payment_type or "cash",
+            payment_type=parsed.payment_type,
             notes=parsed.notes,
             transactions=parsed.transactions,
             raw_transcript=text,
