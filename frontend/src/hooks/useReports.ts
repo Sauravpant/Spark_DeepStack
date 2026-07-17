@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { getReportData } from '@/services/report.service';
+import { useDashboard } from '@/hooks/useDashboard';
 
-export function useReports() {
-  return useQuery({ queryKey: ['reports'], queryFn: getReportData });
+/** @deprecated Use useDashboard — kept for compatibility */
+export function useReports(shopId?: string) {
+  return useDashboard(shopId ?? '');
 }

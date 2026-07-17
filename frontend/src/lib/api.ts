@@ -1,39 +1,45 @@
 import axios from 'axios';
+import { TOKEN_KEY } from '@/constants/routes';
 
-// Create an Axios instance
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:8000/api/v1';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api', // Fallback for now
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor for API calls
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(TOKEN_KEY);
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor for API calls
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  async function (error) {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      // Handle token refresh logic here or dispatch a logout event
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+  (response) => response,
+  async (error) => {
+    const status = error.response?.status;
+    const url = String(error.config?.url ?? '');
+    const isAuthAttempt =
+      url.includes('/auth/login') || url.includes('/auth/register');
+
+    // Don't bounce the user on failed login/register — those 401s are expected
+    if (status === 401 && !isAuthAttempt) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem('vyapar_user');
+      localStorage.removeItem('vyapar_shop');
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

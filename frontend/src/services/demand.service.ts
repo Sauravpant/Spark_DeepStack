@@ -1,7 +1,2 @@
-import { mockDemandData } from '@/mocks/demand.mock';
-import { delay } from '@/lib/utils';
-
-export async function getDemandData() {
-  await delay(600);
-  return mockDemandData;
-}
+/** Legacy mock service removed — use ml.service / useML */
+export {};

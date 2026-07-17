@@ -1,145 +1,243 @@
-import { useReports } from '@/hooks/useReports';
+import { useMemo } from 'react';
+import { useAuth } from '@/providers/AuthProvider';
+import { useDashboard } from '@/hooks/useDashboard';
 import { PageSkeleton } from '@/components/ui/LoadingSkeleton';
-import { ErrorState } from '@/components/ui/StateComponents';
+import { ErrorState, EmptyState } from '@/components/ui/StateComponents';
 import { StatCard } from '@/components/ui/StatCard';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
 } from 'recharts';
-import { DollarSign, TrendingUp, ShoppingCart, BarChart3, Download, FileSpreadsheet, FileText } from 'lucide-react';
+import { DollarSign, TrendingUp, ShoppingCart, BarChart3 } from 'lucide-react';
+import { formatCurrency } from '@/utils/format';
 
 const COLORS = ['#E3182D', '#3b82f6', '#10b981', '#f59e0b', '#6366f1'];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload?.length) {
-    return (
-      <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3">
-        <p className="text-xs font-semibold text-slate-600 mb-1">{label}</p>
-        {payload.map((p: any) => (
-          <p key={p.name} className="text-xs" style={{ color: p.color }}>
-            {p.name}: NPR {p.value.toLocaleString()}
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
-
 export default function Reports() {
-  const { data, isLoading, isError, refetch } = useReports();
+  const { activeShop } = useAuth();
+  const shopId = activeShop?.id ?? '';
+  const { data, isLoading, isError, refetch } = useDashboard(shopId);
 
-  if (isLoading) return <PageSkeleton />;
-  if (isError) return <ErrorState onRetry={refetch} />;
-  if (!data) return null;
+  const paymentPie = useMemo(() => {
+    if (!data) return [];
+    const p = data.revenue_by_payment;
+    return [
+      { name: 'Cash', value: p.cash },
+      { name: 'Credit', value: p.credit },
+      { name: 'QR', value: p.qr },
+    ].filter((x) => x.value > 0);
+  }, [data]);
+
+  const salesTrend = useMemo(
+    () =>
+      (data?.sales_over_time ?? []).map((d) => ({
+        label: new Date(d.date).toLocaleDateString('en-IN', {
+          weekday: 'short',
+          day: 'numeric',
+        }),
+        revenue: d.revenue,
+        profit: d.profit,
+      })),
+    [data]
+  );
+
+  if (!shopId || isLoading) return <PageSkeleton />;
+  if (isError || !data) return <ErrorState onRetry={refetch} />;
+
+  const s = data.summary;
+  const avgOrder =
+    s.total_transactions > 0 ? Math.round(s.total_revenue / s.total_transactions) : 0;
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Reports & Analytics</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Business performance overview</p>
-        </div>
-        <div className="flex gap-2">
-          <Tabs defaultValue="week">
-            <TabsList className="h-9">
-              <TabsTrigger value="day">Day</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Button variant="outline" size="sm"><FileText className="w-4 h-4 mr-2" />PDF</Button>
-          <Button variant="outline" size="sm"><FileSpreadsheet className="w-4 h-4 mr-2" />Excel</Button>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Reports & Analytics</h1>
+        <p className="text-sm text-slate-500 mt-0.5">
+          Live data from your shop dashboard API
+        </p>
       </div>
 
-      {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value={`NPR ${data.summary.totalRevenue.toLocaleString()}`} trend={12.5} subtitle="vs last week" icon={DollarSign} iconBg="bg-emerald-50" iconColor="text-emerald-600" />
-        <StatCard title="Total Profit" value={`NPR ${data.summary.totalProfit.toLocaleString()}`} trend={8.2} subtitle="vs last week" icon={TrendingUp} iconBg="bg-blue-50" iconColor="text-blue-600" />
-        <StatCard title="Total Orders" value={data.summary.totalOrders.toLocaleString()} trend={15} subtitle="vs last week" icon={ShoppingCart} iconBg="bg-purple-50" iconColor="text-purple-600" />
-        <StatCard title="Avg. Order Value" value={`NPR ${data.summary.averageOrderValue}`} trend={3.1} subtitle="vs last week" icon={BarChart3} iconBg="bg-amber-50" iconColor="text-amber-600" />
+        <StatCard
+          title="Total Revenue"
+          value={formatCurrency(s.total_revenue)}
+          icon={DollarSign}
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-600"
+        />
+        <StatCard
+          title="Total Profit"
+          value={formatCurrency(s.total_profit)}
+          icon={TrendingUp}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-600"
+        />
+        <StatCard
+          title="Total Orders"
+          value={s.total_transactions.toLocaleString()}
+          icon={ShoppingCart}
+          iconBg="bg-purple-50"
+          iconColor="text-purple-600"
+        />
+        <StatCard
+          title="Avg. Order Value"
+          value={formatCurrency(avgOrder)}
+          icon={BarChart3}
+          iconBg="bg-amber-50"
+          iconColor="text-amber-600"
+        />
       </div>
 
-      {/* Revenue & Profit Chart */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">Revenue vs Profit</h2>
-            <p className="text-xs text-slate-400">Weekly trend</p>
-          </div>
-          <Button variant="ghost" size="sm" className="text-slate-500"><Download className="w-4 h-4 mr-1" />PNG</Button>
-        </div>
-        <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={data.revenueTrend}>
-            <defs>
-              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#E3182D" stopOpacity={0.1} />
-                <stop offset="95%" stopColor="#E3182D" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#E3182D" strokeWidth={2} fill="url(#colorRevenue)" />
-            <Area type="monotone" dataKey="profit" name="Profit" stroke="#10b981" strokeWidth={2} fill="url(#colorProfit)" />
-          </AreaChart>
-        </ResponsiveContainer>
+        <h2 className="text-base font-bold text-slate-900 mb-1">Revenue vs Profit</h2>
+        <p className="text-xs text-slate-400 mb-4">Last 7 days</p>
+        {salesTrend.length === 0 ? (
+          <EmptyState title="No sales yet" description="Record transactions to see trends." />
+        ) : (
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={salesTrend}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#E3182D" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#E3182D" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#94a3b8' }} />
+              <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} />
+              <Tooltip
+                formatter={(v: number) => formatCurrency(v)}
+                contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
+              />
+              <Legend />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#E3182D"
+                fill="url(#colorRevenue)"
+                strokeWidth={2}
+              />
+              <Area
+                type="monotone"
+                dataKey="profit"
+                stroke="#3b82f6"
+                fill="url(#colorProfit)"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
-      {/* Bottom Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Sales by Category Pie */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h2 className="text-base font-bold text-slate-900 mb-1">Sales by Category</h2>
-          <p className="text-xs text-slate-400 mb-4">Revenue breakdown this period</p>
-          <div className="flex items-center justify-center gap-6">
-            <ResponsiveContainer width="50%" height={180}>
+          <h2 className="text-base font-bold text-slate-900 mb-4">Revenue by Payment</h2>
+          {paymentPie.length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-12">No payment data</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
               <PieChart>
-                <Pie data={data.salesByCategory} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={3}>
-                  {data.salesByCategory.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                <Pie
+                  data={paymentPie}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label={({ name, percent }) =>
+                    `${name} ${(percent * 100).toFixed(0)}%`
+                  }
+                >
+                  {paymentPie.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Pie>
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
               </PieChart>
             </ResponsiveContainer>
-            <div className="space-y-2 flex-1">
-              {data.salesByCategory.map((cat, i) => (
-                <div key={cat.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ background: COLORS[i] }} />
-                    <span className="text-xs text-slate-600">{cat.name}</span>
-                  </div>
-                  <span className="text-xs font-bold text-slate-800">{cat.value}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Daily Bar Chart */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
-          <h2 className="text-base font-bold text-slate-900 mb-1">Daily Revenue</h2>
-          <p className="text-xs text-slate-400 mb-4">Revenue per day this week</p>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={data.revenueTrend} barSize={24}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="revenue" name="Revenue" fill="#E3182D" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <h2 className="text-base font-bold text-slate-900 mb-4">Top Products</h2>
+          {(data.top_products ?? []).length === 0 ? (
+            <p className="text-sm text-slate-500 text-center py-12">No product sales yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={data.top_products.slice(0, 6)}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                <XAxis
+                  dataKey="product_name"
+                  tick={{ fontSize: 10, fill: '#94a3b8' }}
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={60}
+                />
+                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} />
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Bar dataKey="total_revenue" fill="#E3182D" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+        <h2 className="text-base font-bold text-slate-900 mb-4">Revenue by Category</h2>
+        {(data.revenue_by_category ?? []).length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-8">No category revenue yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100">
+                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                    Category
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                    Products
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                    Revenue
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase">
+                    Profit
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {data.revenue_by_category.map((c) => (
+                  <tr key={c.category_name}>
+                    <td className="px-4 py-3 font-medium text-slate-800">{c.category_name}</td>
+                    <td className="px-4 py-3 text-right text-slate-600">{c.product_count}</td>
+                    <td className="px-4 py-3 text-right font-semibold">
+                      {formatCurrency(c.revenue)}
+                    </td>
+                    <td className="px-4 py-3 text-right text-emerald-600">
+                      {formatCurrency(c.profit)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { getDemandData } from '@/services/demand.service';
+import { useDemandForecast7Days } from '@/hooks/useML';
 
-export function useDemand() {
-  return useQuery({ queryKey: ['demand'], queryFn: getDemandData });
+/** @deprecated Use useDemandForecast7Days from useML */
+export function useDemand(shopId?: string, productId?: string | null) {
+  return useDemandForecast7Days(shopId ?? '', productId ?? null);
 }

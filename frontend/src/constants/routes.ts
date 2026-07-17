@@ -9,6 +9,7 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   TRANSACTIONS: '/transactions',
   INVENTORY: '/inventory',
+  CATEGORIES: '/categories',
   CUSTOMERS: '/customers',
   CREDIT_RISK: '/credit-risk',
   DEMAND_FORECASTING: '/demand-forecasting',
@@ -17,6 +18,7 @@ export const ROUTES = {
   NOTIFICATIONS: '/notifications',
   SETTINGS: '/settings',
   PROFILE: '/profile',
+  SHOP_SETUP: '/shop-setup',
 } as const
 
 export const TOKEN_KEY = 'vyapar_access_token'

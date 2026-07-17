@@ -1,142 +1,279 @@
-import { useState } from 'react';
-import { useCustomers, useCustomerStats } from '@/hooks/useCustomers';
+import { useMemo, useState } from 'react';
+import { useAuth } from '@/providers/AuthProvider';
+import { useCustomers, useCreateCustomer, useUpdateCustomer, useDeleteCustomer } from '@/hooks/useCustomers';
 import { PageSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorState, EmptyState } from '@/components/ui/StateComponents';
 import { StatCard } from '@/components/ui/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  Users, UserCheck, ShieldAlert, Star, Search, Plus,
-  Download, Phone, Mail, Calendar, CreditCard, ChevronRight
+  Users,
+  CreditCard,
+  Wallet,
+  Search,
+  Plus,
+  Phone,
+  MapPin,
+  Calendar,
+  Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/utils/format';
+import type { Customer, CreateCustomerPayload } from '@/types';
 
-function RiskBadge({ status }: { status: string }) {
+function utilization(c: Customer) {
+  if (!c.credit_limit) return 0;
+  return Math.min(100, Math.round((c.current_outstanding_balance / c.credit_limit) * 100));
+}
+
+function RiskBadge({ customer }: { customer: Customer }) {
+  const pct = utilization(customer);
+  const label = pct >= 80 ? 'High Exposure' : pct >= 40 ? 'Moderate' : 'Healthy';
   return (
-    <Badge className={cn('text-xs font-semibold border-0', {
-      'bg-red-100 text-red-700': status === 'High Risk',
-      'bg-amber-100 text-amber-700': status === 'Medium Risk',
-      'bg-emerald-100 text-emerald-700': status === 'Low Risk',
-    })}>
-      {status}
+    <Badge
+      className={cn('text-xs font-semibold border-0', {
+        'bg-red-100 text-red-700': pct >= 80,
+        'bg-amber-100 text-amber-700': pct >= 40 && pct < 80,
+        'bg-emerald-100 text-emerald-700': pct < 40,
+      })}
+    >
+      {label}
     </Badge>
   );
 }
 
+const emptyForm: CreateCustomerPayload = {
+  full_name: '',
+  phone: '',
+  address: '',
+  credit_limit: 5000,
+};
+
 export default function Customers() {
-  const { data: customers, isLoading, isError, refetch } = useCustomers();
-  const { data: stats } = useCustomerStats();
+  const { activeShop } = useAuth();
+  const shopId = activeShop?.id ?? '';
+  const { data: customers, isLoading, isError, refetch } = useCustomers(shopId);
+  const createCustomer = useCreateCustomer(shopId);
+  const deleteCustomer = useDeleteCustomer(shopId);
+
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'all' | 'credit' | 'high'>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState<CreateCustomerPayload>(emptyForm);
 
-  if (isLoading) return <PageSkeleton />;
+  const selected = customers?.find((c) => c.id === selectedId);
+  const updateCustomer = useUpdateCustomer(shopId, selectedId ?? '');
+
+  const stats = useMemo(() => {
+    const list = customers ?? [];
+    return {
+      total: list.length,
+      withCredit: list.filter((c) => c.current_outstanding_balance > 0).length,
+      outstanding: list.reduce((s, c) => s + c.current_outstanding_balance, 0),
+      avgLimit:
+        list.length > 0
+          ? Math.round(list.reduce((s, c) => s + c.credit_limit, 0) / list.length)
+          : 0,
+    };
+  }, [customers]);
+
+  const filtered = useMemo(() => {
+    return (customers ?? []).filter((c) => {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        c.full_name.toLowerCase().includes(q) ||
+        c.phone?.toLowerCase().includes(q) ||
+        c.id.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+      if (filter === 'credit') return c.current_outstanding_balance > 0;
+      if (filter === 'high') return utilization(c) >= 80;
+      return true;
+    });
+  }, [customers, search, filter]);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await createCustomer.mutateAsync(form);
+    setDialogOpen(false);
+    setForm(emptyForm);
+  };
+
+  if (!shopId || isLoading) return <PageSkeleton />;
   if (isError) return <ErrorState onRetry={refetch} />;
-
-  const filtered = (customers ?? []).filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.id.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const selected = customers?.find(c => c.id === selectedId);
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Manage credit, risk, and customer relationships</p>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Manage credit limits, outstanding balances, and customer records
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />Export</Button>
-          <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white"><Plus className="w-4 h-4 mr-2" />Add Customer</Button>
-        </div>
+        <Button
+          size="sm"
+          className="bg-red-600 hover:bg-red-700 text-white"
+          onClick={() => setDialogOpen(true)}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Customer
+        </Button>
       </div>
 
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title="Total Customers" value={stats.totalCustomers.toLocaleString()} icon={Users} iconBg="bg-blue-50" iconColor="text-blue-600" />
-          <StatCard title="Active Credit" value={stats.activeCredit.toLocaleString()} icon={CreditCard} iconBg="bg-purple-50" iconColor="text-purple-600" />
-          <StatCard title="High Risk" value={stats.highRisk.toLocaleString()} icon={ShieldAlert} iconBg="bg-red-50" iconColor="text-red-600" />
-          <StatCard title="Avg. AI Score" value={`${stats.averageScore}`} icon={Star} iconBg="bg-amber-50" iconColor="text-amber-600" />
-        </div>
-      )}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Customers"
+          value={stats.total.toLocaleString()}
+          icon={Users}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-600"
+        />
+        <StatCard
+          title="Active Credit"
+          value={stats.withCredit.toLocaleString()}
+          icon={CreditCard}
+          iconBg="bg-amber-50"
+          iconColor="text-amber-600"
+        />
+        <StatCard
+          title="Total Outstanding"
+          value={formatCurrency(stats.outstanding)}
+          icon={Wallet}
+          iconBg="bg-red-50"
+          iconColor="text-red-600"
+        />
+        <StatCard
+          title="Avg Credit Limit"
+          value={formatCurrency(stats.avgLimit)}
+          icon={CreditCard}
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-600"
+        />
+      </div>
 
-      {/* Table Card */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
-              placeholder="Search customers..."
+              placeholder="Search by name or phone..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               className="pl-9"
             />
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">All</Button>
-            <Button variant="ghost" size="sm" className="text-red-600">High Risk</Button>
-            <Button variant="ghost" size="sm">Medium</Button>
-            <Button variant="ghost" size="sm">Low Risk</Button>
+            {(
+              [
+                ['all', 'All'],
+                ['credit', 'Has Credit'],
+                ['high', 'High Exposure'],
+              ] as const
+            ).map(([key, label]) => (
+              <Button
+                key={key}
+                variant={filter === key ? 'default' : 'ghost'}
+                size="sm"
+                className={filter === key ? 'bg-red-600 hover:bg-red-700 text-white' : ''}
+                onClick={() => setFilter(key)}
+              >
+                {label}
+              </Button>
+            ))}
           </div>
         </div>
 
         {filtered.length === 0 ? (
-          <EmptyState title="No customers found" description="Try a different search term." />
+          <EmptyState
+            title="No customers found"
+            description="Add your first customer to start tracking credit sales."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Customer</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">AI Score</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Risk</th>
-                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Outstanding</th>
-                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Last Order</th>
-                  <th className="px-4 py-3"></th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Phone
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Credit Limit
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Exposure
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Outstanding
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Joined
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {filtered.map(c => (
-                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors cursor-pointer" onClick={() => setSelectedId(c.id)}>
+                {filtered.map((c) => (
+                  <tr
+                    key={c.id}
+                    className="hover:bg-slate-50/60 transition-colors cursor-pointer"
+                    onClick={() => setSelectedId(c.id)}
+                  >
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8 border border-slate-200">
-                          <AvatarFallback className="bg-red-50 text-red-600 text-xs font-bold">{c.name[0]}</AvatarFallback>
+                          <AvatarFallback className="bg-red-50 text-red-600 text-xs font-bold">
+                            {c.full_name[0]}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">{c.name}</p>
-                          <p className="text-xs text-slate-400 font-mono">#{c.id}</p>
+                          <p className="text-sm font-semibold text-slate-800">{c.full_name}</p>
+                          <p className="text-xs text-slate-400 font-mono">
+                            #{c.id.slice(0, 8)}
+                          </p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5">
-                      <p className="text-sm text-slate-600">{c.phone}</p>
-                      <p className="text-xs text-slate-400">{c.email}</p>
+                    <td className="px-4 py-3.5 text-sm text-slate-600">{c.phone || '—'}</td>
+                    <td className="px-4 py-3.5 text-sm text-slate-700">
+                      {formatCurrency(c.credit_limit)}
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                          <div className={cn('h-full rounded-full', c.score >= 80 ? 'bg-emerald-500' : c.score >= 60 ? 'bg-amber-500' : 'bg-red-500')} style={{ width: `${c.score}%` }} />
-                        </div>
-                        <span className="text-sm font-bold text-slate-700">{c.score}</span>
-                      </div>
+                      <RiskBadge customer={c} />
                     </td>
-                    <td className="px-4 py-3.5"><RiskBadge status={c.status} /></td>
                     <td className="px-4 py-3.5 text-right">
-                      <span className={cn('text-sm font-semibold', c.outstanding > 0 ? 'text-red-600' : 'text-emerald-600')}>
-                        {c.outstanding > 0 ? `NPR ${c.outstanding.toLocaleString()}` : 'Cleared'}
+                      <span
+                        className={cn(
+                          'text-sm font-semibold',
+                          c.current_outstanding_balance > 0
+                            ? 'text-red-600'
+                            : 'text-emerald-600'
+                        )}
+                      >
+                        {c.current_outstanding_balance > 0
+                          ? formatCurrency(c.current_outstanding_balance)
+                          : 'Cleared'}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-sm text-slate-500">{new Date(c.recentOrderDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</td>
-                    <td className="px-4 py-3.5">
-                      <ChevronRight className="w-4 h-4 text-slate-300" />
+                    <td className="px-4 py-3.5 text-sm text-slate-500">
+                      {new Date(c.created_at).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
                     </td>
                   </tr>
                 ))}
@@ -145,12 +282,13 @@ export default function Customers() {
           </div>
         )}
 
-        <div className="p-3 border-t border-slate-100 flex items-center justify-between">
-          <p className="text-xs text-slate-500">Showing {filtered.length} of {customers?.length} customers</p>
+        <div className="p-3 border-t border-slate-100">
+          <p className="text-xs text-slate-500">
+            Showing {filtered.length} of {customers?.length ?? 0} customers
+          </p>
         </div>
       </div>
 
-      {/* Customer Detail Drawer */}
       <Sheet open={!!selectedId} onOpenChange={() => setSelectedId(null)}>
         <SheetContent className="w-[420px] sm:w-[480px] overflow-y-auto">
           {selected && (
@@ -158,65 +296,173 @@ export default function Customers() {
               <SheetHeader className="pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-4">
                   <Avatar className="w-14 h-14 border-2 border-red-200">
-                    <AvatarFallback className="bg-red-50 text-red-600 text-xl font-bold">{selected.name[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-red-50 text-red-600 text-xl font-bold">
+                      {selected.full_name[0]}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <SheetTitle className="text-lg font-bold text-slate-900">{selected.name}</SheetTitle>
-                    <p className="text-xs font-mono text-slate-400">#{selected.id}</p>
-                    <div className="mt-1"><RiskBadge status={selected.status} /></div>
+                    <SheetTitle className="text-lg font-bold text-slate-900">
+                      {selected.full_name}
+                    </SheetTitle>
+                    <div className="mt-1">
+                      <RiskBadge customer={selected} />
+                    </div>
                   </div>
                 </div>
               </SheetHeader>
 
               <div className="space-y-5 mt-5">
-                {/* Contact */}
                 <div className="space-y-2">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Contact Info</h3>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    Contact
+                  </h3>
                   <div className="flex items-center gap-3 text-sm text-slate-700">
-                    <Phone className="w-4 h-4 text-slate-400" />{selected.phone}
+                    <Phone className="w-4 h-4 text-slate-400" />
+                    {selected.phone || 'No phone'}
                   </div>
                   <div className="flex items-center gap-3 text-sm text-slate-700">
-                    <Mail className="w-4 h-4 text-slate-400" />{selected.email}
+                    <MapPin className="w-4 h-4 text-slate-400" />
+                    {selected.address || 'No address'}
                   </div>
                   <div className="flex items-center gap-3 text-sm text-slate-700">
-                    <Calendar className="w-4 h-4 text-slate-400" />Member since {selected.memberSince}
+                    <Calendar className="w-4 h-4 text-slate-400" />
+                    Member since{' '}
+                    {new Date(selected.created_at).toLocaleDateString('en-IN', {
+                      month: 'short',
+                      year: 'numeric',
+                    })}
                   </div>
                 </div>
 
-                {/* Credit Stats */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-xs text-slate-500 mb-1">AI Credit Score</p>
-                    <p className={cn('text-2xl font-black', selected.score >= 80 ? 'text-emerald-600' : selected.score >= 60 ? 'text-amber-600' : 'text-red-600')}>{selected.score}</p>
+                    <p className="text-xs text-slate-500 mb-1">Credit Limit</p>
+                    <p className="text-xl font-bold text-slate-800">
+                      {formatCurrency(selected.credit_limit)}
+                    </p>
                   </div>
                   <div className="bg-slate-50 rounded-lg p-3">
                     <p className="text-xs text-slate-500 mb-1">Outstanding</p>
-                    <p className="text-2xl font-black text-red-600">NPR {selected.outstanding.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-xs text-slate-500 mb-1">Total Purchases</p>
-                    <p className="text-xl font-bold text-slate-800">NPR {selected.totalPurchases.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-3">
-                    <p className="text-xs text-slate-500 mb-1">Overdue Days</p>
-                    <p className={cn('text-xl font-bold', selected.overdueDays > 0 ? 'text-red-600' : 'text-emerald-600')}>
-                      {selected.overdueDays > 0 ? `${selected.overdueDays}d` : 'None'}
+                    <p className="text-xl font-bold text-red-600">
+                      {formatCurrency(selected.current_outstanding_balance)}
                     </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <p className="text-xs text-slate-500 mb-1">Max Ever</p>
+                    <p className="text-xl font-bold text-slate-800">
+                      {formatCurrency(selected.max_outstanding_ever)}
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-lg p-3">
+                    <p className="text-xs text-slate-500 mb-1">Utilization</p>
+                    <p className="text-xl font-bold text-slate-800">{utilization(selected)}%</p>
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="space-y-2">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</h3>
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white justify-start"><UserCheck className="w-4 h-4 mr-2" />Approve Credit Extension</Button>
-                  <Button variant="outline" className="w-full justify-start"><CreditCard className="w-4 h-4 mr-2" />Request Payment</Button>
-                  <Button variant="outline" className="w-full justify-start text-slate-600"><Download className="w-4 h-4 mr-2" />Export Statement</Button>
+                  <Label>Update credit limit</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      defaultValue={selected.credit_limit}
+                      id="credit-limit-edit"
+                    />
+                    <Button
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      disabled={updateCustomer.isPending}
+                      onClick={() => {
+                        const el = document.getElementById(
+                          'credit-limit-edit'
+                        ) as HTMLInputElement;
+                        updateCustomer.mutate({ credit_limit: Number(el.value) });
+                      }}
+                    >
+                      {updateCustomer.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        'Save'
+                      )}
+                    </Button>
+                  </div>
                 </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                  disabled={deleteCustomer.isPending}
+                  onClick={() => {
+                    deleteCustomer.mutate(selected.id);
+                    setSelectedId(null);
+                  }}
+                >
+                  Deactivate Customer
+                </Button>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Customer</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Full name</Label>
+              <Input
+                required
+                value={form.full_name}
+                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              <Input
+                required
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Input
+                value={form.address ?? ''}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Credit limit (NPR)</Label>
+              <Input
+                type="number"
+                min={0}
+                required
+                value={form.credit_limit}
+                onChange={(e) =>
+                  setForm({ ...form, credit_limit: Number(e.target.value) })
+                }
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={createCustomer.isPending}
+              >
+                {createCustomer.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  'Create'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
