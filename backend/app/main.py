@@ -17,6 +17,7 @@ from app.api.credit_risk import router_generic as credit_risk_generic_router
 from app.api.credit_risk import router_customer as credit_risk_customer_router
 from app.api.demand_forecast import router_generic as demand_generic_router
 from app.api.demand_forecast import router_shop as demand_shop_router
+from app.api.voice import router as voice_router
 from app.core.ml_manager import load_credit_risk_model, load_demand_model
 
 logger = logging.getLogger(__name__)
@@ -83,6 +84,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Confirmation-Text", "X-Processed-Count"],
 )
 
 
@@ -146,6 +148,7 @@ app.include_router(credit_risk_generic_router, prefix=API_V1)
 app.include_router(credit_risk_customer_router, prefix=API_V1)
 app.include_router(demand_generic_router, prefix=API_V1)
 app.include_router(demand_shop_router, prefix=API_V1)
+app.include_router(voice_router, prefix=API_V1)
 
 
 @app.get("/")

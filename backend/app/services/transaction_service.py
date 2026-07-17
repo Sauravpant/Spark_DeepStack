@@ -9,7 +9,7 @@ from app.models.credit_sale import CreditSale
 from app.models.product import Product
 from app.models.customer import Customer
 from app.models.user import User
-from app.models.enums import PaymentType, CreditStatus
+from app.models.enums import PaymentType, CreditStatus, TransactionType
 from app.schemas.transaction import TransactionCreateRequest, CreditSaleUpdateRequest
 from app.services.shop_service import get_shop_by_id
 
@@ -26,7 +26,7 @@ def create_transaction(
         )
 
     # Credit sales require a customer and due date
-    if payload.payment_type == PaymentType.CREDIT:
+    if payload.transaction_type == TransactionType.SALE and payload.payment_type == PaymentType.CREDIT:
         if not payload.customer_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -50,20 +50,26 @@ def create_transaction(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Product {item_req.product_id} not found in this shop",
             )
-        if product.stock_quantity < item_req.quantity:
+        if payload.transaction_type == TransactionType.SALE and product.stock_quantity < item_req.quantity:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Insufficient stock for '{product.product_name}'. Available: {product.stock_quantity}",
             )
-        item_subtotal = float(product.selling_price) * item_req.quantity
+        unit_price = float(product.selling_price)
+        if payload.transaction_type == TransactionType.PURCHASE:
+            unit_price = float(product.cost_price)
+        item_subtotal = unit_price * item_req.quantity
         tx_items.append(TransactionItem(
             product_id=product.id,
             quantity=item_req.quantity,
-            unit_price=float(product.selling_price),
+            unit_price=unit_price,
             subtotal=item_subtotal,
         ))
-        # Deduct stock
-        product.stock_quantity -= item_req.quantity
+        # Update stock based on transaction direction
+        if payload.transaction_type == TransactionType.SALE:
+            product.stock_quantity -= item_req.quantity
+        else:
+            product.stock_quantity += item_req.quantity
         subtotal += item_subtotal
 
     total_amount = subtotal - payload.discount
@@ -71,6 +77,7 @@ def create_transaction(
     transaction = Transaction(
         shop_id=shop_id,
         customer_id=payload.customer_id,
+        transaction_type=payload.transaction_type,
         payment_type=payload.payment_type,
         subtotal=subtotal,
         discount=payload.discount,
@@ -81,8 +88,8 @@ def create_transaction(
     db.add(transaction)
     db.flush()  # Get the transaction ID
 
-    # Create credit sale record if payment type is credit
-    if payload.payment_type == PaymentType.CREDIT:
+    # Create credit sale record only for sales paid on credit
+    if payload.transaction_type == TransactionType.SALE and payload.payment_type == PaymentType.CREDIT:
         credit_sale = CreditSale(
             transaction_id=transaction.id,
             customer_id=payload.customer_id,

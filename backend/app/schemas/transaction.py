@@ -1,7 +1,7 @@
 import uuid
-from datetime import date, datetime
-from pydantic import BaseModel
-from app.models.enums import PaymentType, CreditStatus
+from datetime import date, datetime, timezone
+from pydantic import BaseModel, field_serializer
+from app.models.enums import PaymentType, CreditStatus, TransactionType
 
 
 # ---- Request Schemas ----
@@ -13,6 +13,7 @@ class TransactionItemCreateRequest(BaseModel):
 
 class TransactionCreateRequest(BaseModel):
     customer_id: uuid.UUID | None = None
+    transaction_type: TransactionType = TransactionType.SALE
     payment_type: PaymentType
     discount: float = 0.00
     notes: str | None = None
@@ -49,6 +50,7 @@ class TransactionResponse(BaseModel):
     id: uuid.UUID
     shop_id: uuid.UUID
     customer_id: uuid.UUID | None = None
+    transaction_type: TransactionType
     payment_type: PaymentType
     subtotal: float
     discount: float
@@ -57,6 +59,13 @@ class TransactionResponse(BaseModel):
     created_at: datetime
     items: list[TransactionItemResponse] = []
     credit_sale: CreditSaleResponse | None = None
+
+    @field_serializer("created_at")
+    def serialize_created_at(self, v: datetime, _info) -> str:
+        # Ensure UTC timezone info is always included in the serialized output
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v.isoformat()
 
     model_config = {"from_attributes": True}
 

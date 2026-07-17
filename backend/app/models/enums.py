@@ -13,6 +13,11 @@ class PaymentType(str, Enum):
     QR = "qr"
 
 
+class TransactionType(str, Enum):
+    SALE = "sale"
+    PURCHASE = "purchase"
+
+
 class CreditStatus(str, Enum):
     PAID = "paid"
     UNPAID = "unpaid"

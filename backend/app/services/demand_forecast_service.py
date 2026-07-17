@@ -27,6 +27,7 @@ from app.models.transaction import Transaction
 from app.models.transaction_item import TransactionItem
 from app.models.category import Category
 from app.models.demand_forecast import DemandForecast
+from app.models.enums import TransactionType
 from app.schemas.demand_forecast import DemandForecastRequest, DemandForecastByProductRequest
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,7 @@ def _build_product_sales_history(
         .join(TransactionItem, TransactionItem.transaction_id == Transaction.id)
         .filter(
             Transaction.shop_id == shop_id,
+            Transaction.transaction_type == TransactionType.SALE,
             TransactionItem.product_id == product_id,
             Transaction.created_at >= datetime.combine(start_date, datetime.min.time()),
             Transaction.created_at <= datetime.combine(last_date, datetime.max.time()),

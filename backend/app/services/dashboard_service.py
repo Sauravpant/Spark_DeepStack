@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, datetime, timezone, timedelta
-from sqlalchemy import func as sa_func
+from sqlalchemy import func as sa_func, text as sa_text
 from sqlalchemy.orm import Session
 
 from app.models.product import Product
@@ -10,7 +10,7 @@ from app.models.transaction_item import TransactionItem
 from app.models.credit_sale import CreditSale
 from app.models.category import Category
 from app.models.user import User
-from app.models.enums import PaymentType, CreditStatus
+from app.models.enums import PaymentType, CreditStatus, TransactionType
 from app.schemas.dashboard import (
     DashboardSummary,
     RevenueByPaymentType,
@@ -22,9 +22,13 @@ from app.schemas.dashboard import (
 )
 from app.services.shop_service import get_shop_by_id
 
+NEPAL_TIMESTAMP = Transaction.created_at + sa_text("interval '5 hours 45 minutes'")
+
 
 def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetail:
     get_shop_by_id(db, user, shop_id)
+
+    today = datetime.now().date()
 
     # Total products
     total_products = db.query(sa_func.count(Product.id)).filter(
@@ -38,12 +42,14 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
 
     # Total transactions
     total_transactions = db.query(sa_func.count(Transaction.id)).filter(
-        Transaction.shop_id == shop_id
+        Transaction.shop_id == shop_id,
+        Transaction.transaction_type == TransactionType.SALE,
     ).scalar() or 0
 
     # Total revenue
     total_revenue = db.query(sa_func.sum(Transaction.total_amount)).filter(
-        Transaction.shop_id == shop_id
+        Transaction.shop_id == shop_id,
+        Transaction.transaction_type == TransactionType.SALE,
     ).scalar() or 0.0
 
     # Total COGS
@@ -52,7 +58,8 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
     ).join(
         Transaction, TransactionItem.transaction_id == Transaction.id
     ).filter(
-        Transaction.shop_id == shop_id
+        Transaction.shop_id == shop_id,
+        Transaction.transaction_type == TransactionType.SALE,
     ).scalar() or 0.0
 
     total_profit = float(total_revenue) - float(total_cogs)
@@ -73,15 +80,16 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
     ).scalar() or 0
 
     # Today's transactions
-    today = date.today()
     today_transactions = db.query(sa_func.count(Transaction.id)).filter(
         Transaction.shop_id == shop_id,
-        sa_func.date(Transaction.created_at) == today,
+        Transaction.transaction_type == TransactionType.SALE,
+        sa_func.date(NEPAL_TIMESTAMP) == today,
     ).scalar() or 0
 
     today_revenue = db.query(sa_func.sum(Transaction.total_amount)).filter(
         Transaction.shop_id == shop_id,
-        sa_func.date(Transaction.created_at) == today,
+        Transaction.transaction_type == TransactionType.SALE,
+        sa_func.date(NEPAL_TIMESTAMP) == today,
     ).scalar() or 0.0
 
     today_cogs = db.query(sa_func.sum(TransactionItem.quantity * Product.cost_price)).join(
@@ -90,7 +98,8 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
         Transaction, TransactionItem.transaction_id == Transaction.id
     ).filter(
         Transaction.shop_id == shop_id,
-        sa_func.date(Transaction.created_at) == today,
+        Transaction.transaction_type == TransactionType.SALE,
+        sa_func.date(NEPAL_TIMESTAMP) == today,
     ).scalar() or 0.0
 
     today_profit = float(today_revenue) - float(today_cogs)
@@ -111,7 +120,7 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
     # Revenue by payment type
     payment_revenues = (
         db.query(Transaction.payment_type, sa_func.sum(Transaction.total_amount))
-        .filter(Transaction.shop_id == shop_id)
+        .filter(Transaction.shop_id == shop_id, Transaction.transaction_type == TransactionType.SALE)
         .group_by(Transaction.payment_type)
         .all()
     )
@@ -132,7 +141,7 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
         )
         .join(TransactionItem, TransactionItem.product_id == Product.id)
         .join(Transaction, TransactionItem.transaction_id == Transaction.id)
-        .filter(Transaction.shop_id == shop_id)
+        .filter(Transaction.shop_id == shop_id, Transaction.transaction_type == TransactionType.SALE)
         .group_by(Product.product_name)
         .order_by(sa_func.sum(TransactionItem.quantity).desc())
         .limit(5)
@@ -156,7 +165,8 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
 
         rev = db.query(sa_func.sum(Transaction.total_amount)).filter(
             Transaction.shop_id == shop_id,
-            sa_func.date(Transaction.created_at) == d,
+            Transaction.transaction_type == TransactionType.SALE,
+            sa_func.date(NEPAL_TIMESTAMP) == d,
         ).scalar() or 0.0
 
         cogs = db.query(sa_func.sum(TransactionItem.quantity * Product.cost_price)).join(
@@ -165,7 +175,8 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
             Transaction, TransactionItem.transaction_id == Transaction.id
         ).filter(
             Transaction.shop_id == shop_id,
-            sa_func.date(Transaction.created_at) == d,
+            Transaction.transaction_type == TransactionType.SALE,
+            sa_func.date(NEPAL_TIMESTAMP) == d,
         ).scalar() or 0.0
 
         sales_over_time.append(DailySalesProfit(
@@ -184,7 +195,7 @@ def get_dashboard(db: Session, user: User, shop_id: uuid.UUID) -> DashboardDetai
         .join(Product, Product.category_id == Category.id)
         .join(TransactionItem, TransactionItem.product_id == Product.id)
         .join(Transaction, TransactionItem.transaction_id == Transaction.id)
-        .filter(Transaction.shop_id == shop_id)
+        .filter(Transaction.shop_id == shop_id, Transaction.transaction_type == TransactionType.SALE)
         .group_by(Category.name)
         .all()
     )

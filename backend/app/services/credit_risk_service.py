@@ -24,7 +24,7 @@ from app.core.ml_manager import get_credit_risk_predictor
 from app.models.customer import Customer
 from app.models.credit_sale import CreditSale
 from app.models.transaction import Transaction
-from app.models.enums import CreditStatus, PaymentType, RiskLevel
+from app.models.enums import CreditStatus, PaymentType, RiskLevel, TransactionType
 from app.models.credit_prediction import CreditPrediction
 from app.schemas.credit_risk import CreditRiskPredictRequest
 
@@ -76,7 +76,10 @@ def _compute_features_from_db(db: Session, customer: Customer) -> Dict[str, Any]
     # ---- All customer transactions -----------------------------------------
     all_txns = (
         db.query(Transaction)
-        .filter(Transaction.customer_id == customer_id)
+        .filter(
+            Transaction.customer_id == customer_id,
+            Transaction.transaction_type == TransactionType.SALE,
+        )
         .all()
     )
     # Last 30 days transactions
