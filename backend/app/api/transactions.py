@@ -44,20 +44,7 @@ def get_transactions(
     )
 
 
-@router.get("/{transaction_id}", response_model=ApiResponse[TransactionResponse])
-def get_transaction(
-    shop_id: uuid.UUID,
-    transaction_id: uuid.UUID,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    tx = transaction_service.get_transaction_by_id(db, current_user, shop_id, transaction_id)
-    return ApiResponse(
-        message="Transaction fetched",
-        data=TransactionResponse.model_validate(tx),
-    )
-
-
+# Static paths must be registered before /{transaction_id}
 @router.get("/credit-sales/", response_model=ApiResponse[list[CreditSaleResponse]])
 def get_credit_sales(
     shop_id: uuid.UUID,
@@ -84,4 +71,18 @@ def update_credit_sale(
     return ApiResponse(
         message="Credit sale updated successfully",
         data=CreditSaleResponse.model_validate(sale),
+    )
+
+
+@router.get("/{transaction_id}", response_model=ApiResponse[TransactionResponse])
+def get_transaction(
+    shop_id: uuid.UUID,
+    transaction_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    tx = transaction_service.get_transaction_by_id(db, current_user, shop_id, transaction_id)
+    return ApiResponse(
+        message="Transaction fetched",
+        data=TransactionResponse.model_validate(tx),
     )

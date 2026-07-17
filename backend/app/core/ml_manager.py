@@ -40,13 +40,23 @@ def load_credit_risk_model():
             )
             return None
         logger.info("Loading credit risk model from %s ...", CREDIT_RISK_MODEL_PATH)
-        # Add the ml/credit_risk directory to sys.path so that the
-        # pickled CreditRiskPredictor class can be resolved.
-        credit_risk_dir = str(CREDIT_RISK_MODEL_PATH.parent.parent)
-        if credit_risk_dir not in sys.path:
-            sys.path.insert(0, credit_risk_dir)
-        _credit_risk_predictor = joblib.load(CREDIT_RISK_MODEL_PATH)
-        logger.info("Credit risk model loaded: %r", _credit_risk_predictor)
+        
+        orig_sys_path = list(sys.path)
+        try:
+            credit_risk_dir = str(CREDIT_RISK_MODEL_PATH.parent.parent)
+            sys.path = [credit_risk_dir] + [p for p in sys.path if p != credit_risk_dir]
+            
+            # Remove any existing cached 'src' module to avoid collision
+            if 'src' in sys.modules:
+                del sys.modules['src']
+            for key in list(sys.modules.keys()):
+                if key.startswith('src.'):
+                    del sys.modules[key]
+                    
+            _credit_risk_predictor = joblib.load(CREDIT_RISK_MODEL_PATH)
+            logger.info("Credit risk model loaded: %r", _credit_risk_predictor)
+        finally:
+            sys.path = orig_sys_path
     return _credit_risk_predictor
 
 
@@ -62,13 +72,23 @@ def load_demand_model():
             )
             return None
         logger.info("Loading demand forecasting model from %s ...", DEMAND_MODEL_PATH)
-        # Add the ml/demand directory to sys.path so that the
-        # pickled DemandForecaster class can be resolved.
-        demand_dir = str(DEMAND_MODEL_PATH.parent.parent)
-        if demand_dir not in sys.path:
-            sys.path.insert(0, demand_dir)
-        _demand_forecaster = joblib.load(DEMAND_MODEL_PATH)
-        logger.info("Demand forecasting model loaded: %s", type(_demand_forecaster).__name__)
+        
+        orig_sys_path = list(sys.path)
+        try:
+            demand_dir = str(DEMAND_MODEL_PATH.parent.parent)
+            sys.path = [demand_dir] + [p for p in sys.path if p != demand_dir]
+            
+            # Remove any existing cached 'src' module to avoid collision
+            if 'src' in sys.modules:
+                del sys.modules['src']
+            for key in list(sys.modules.keys()):
+                if key.startswith('src.'):
+                    del sys.modules[key]
+                    
+            _demand_forecaster = joblib.load(DEMAND_MODEL_PATH)
+            logger.info("Demand forecasting model loaded: %s", type(_demand_forecaster).__name__)
+        finally:
+            sys.path = orig_sys_path
     return _demand_forecaster
 
 
