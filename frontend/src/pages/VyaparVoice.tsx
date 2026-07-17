@@ -311,10 +311,10 @@ export default function VyaparVoice() {
       if (data.matched_transactions && data.matched_transactions.length > 0) {
         parsedTxs = data.matched_transactions.map((tx) => ({
           action: tx.action,
-          customer_name: tx.customer_name || null,
-          customer_id: tx.customer_id || null,
-          payment_type: tx.payment_type || "cash",
-          due_date: tx.due_date || new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
+          customer_name: null,
+          customer_id: null,
+          payment_type: "cash",
+          due_date: null,
           notes: tx.notes || `Vyapar Voice: ${tx.action === "sale" ? "बिक्री" : "खरिद"}`,
           items: tx.items.map((it) => ({
             spoken_product: it.spoken_product,
@@ -330,20 +330,12 @@ export default function VyaparVoice() {
         const saleItems = data.matched_items.filter((i) => i.action === "sale");
         const purchaseItems = data.matched_items.filter((i) => i.action === "purchase");
         if (saleItems.length > 0) {
-          const mainCustomerName = data.extracted.customer_name || null;
-          let matchedCustId: string | null = null;
-          if (mainCustomerName) {
-            const match = customerList.find((c) =>
-              c.full_name.toLowerCase().includes(mainCustomerName.toLowerCase())
-            );
-            if (match) matchedCustId = match.id;
-          }
           parsedTxs.push({
             action: "sale",
-            customer_name: mainCustomerName,
-            customer_id: matchedCustId,
-            payment_type: data.extracted.payment_type || "cash",
-            due_date: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
+            customer_name: null,
+            customer_id: null,
+            payment_type: "cash",
+            due_date: null,
             notes: data.extracted.notes || "Vyapar Voice sale",
             items: saleItems.map((it) => ({
               spoken_product: it.spoken_product,
@@ -565,7 +557,7 @@ export default function VyaparVoice() {
 
   const sampleCommands = [
     { text: "कोक पाँच वटा बेचियो", label: "Quick Sale" },
-    { text: "रामलाई पाँच वटा कोक र दुई वटा चामल उधारोमा दिएँ", label: "Credit Sale" },
+    { text: "दूध तीन लिटर थपियो", label: "Stock-in" },
     { text: "हरिलाई दुई वटा कोक बेचियो र दूध तीन लिटर थपियो", label: "Mixed" },
   ];
 
@@ -609,7 +601,7 @@ export default function VyaparVoice() {
                   </span>
                 </h1>
                 <p className="text-slate-400 text-xs md:text-sm max-w-lg leading-relaxed">
-                  Speak naturally in Nepali to record sales, manage customer credits, and check stock-in. The AI system handles matching, logging, and validations automatically.
+                  Speak naturally in Nepali to record sales and stock-in. The AI extracts items, and you can choose cash or credit manually before saving.
                 </p>
               </div>
 
