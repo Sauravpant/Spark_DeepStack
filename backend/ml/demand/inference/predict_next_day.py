@@ -1,9 +1,13 @@
+from pathlib import Path
 import sys
 import joblib
-from pathlib import Path
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-forecaster = joblib.load("../models/forecasting_pipeline.joblib")
+
+DEMAND_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(DEMAND_ROOT))
+
+MODEL_PATH = DEMAND_ROOT / "models" / "forecasting_pipeline.joblib"
+
+forecaster = joblib.load(MODEL_PATH)
 
 result = forecaster.predict_next_day(
     shop_id="S01",
