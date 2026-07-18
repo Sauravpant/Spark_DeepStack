@@ -224,8 +224,8 @@ export default function DemandForecast() {
           value={selected?.product_name?.slice(0, 18) ?? "—"}
           subtitle={`Stock: ${selected?.stock_quantity ?? 0}`}
           icon={Package}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
+          iconBg="bg-red-50/80"
+          iconColor="text-[#E3182D]"
         />
         <StatCard
           title="Tomorrow"
@@ -483,11 +483,11 @@ export default function DemandForecast() {
                         Model: {modelName}
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
                         Day-of-week &amp; rolling 21-day avg
                       </li>
                       <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
                         Festival proximity features
                       </li>
                     </ul>
@@ -503,11 +503,11 @@ export default function DemandForecast() {
               onClick={() => setShowGlobal((v) => !v)}
               className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-blue-600" />
+                <BarChart3 className="w-4 h-4 text-[#E3182D]" />
                 <span className="font-bold text-sm text-slate-900">
                   Global Feature Importance
                 </span>
-                <Badge className="bg-blue-50 text-blue-600 border-blue-200 border text-[10px] h-auto px-2">
+                <Badge className="bg-red-50 text-[#E3182D] border-red-200 border text-[10px] h-auto px-2">
                   SHAP / Native
                 </Badge>
               </div>
@@ -550,13 +550,13 @@ export default function DemandForecast() {
                                   .replace(/_/g, " ")
                                   .replace(/\b\w/g, (c) => c.toUpperCase())}
                               </span>
-                              <span className="text-blue-600 shrink-0">
+                              <span className="text-[#E3182D] shrink-0">
                                 {e.importance.toFixed(4)}
                               </span>
                             </div>
                             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                               <div
-                                className="bg-blue-500 h-full rounded-full transition-all"
+                                className="bg-[#E3182D] h-full rounded-full transition-all"
                                 style={{
                                   width: `${globalMax > 0 ? Math.min(100, (Math.abs(e.importance) / globalMax) * 100) : 0}%`,
                                 }}

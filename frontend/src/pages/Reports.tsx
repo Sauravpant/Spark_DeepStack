@@ -80,8 +80,8 @@ export default function Reports() {
           title="Total Profit"
           value={formatCurrency(s.total_profit)}
           icon={TrendingUp}
-          iconBg="bg-blue-50/80"
-          iconColor="text-blue-600"
+          iconBg="bg-red-50/80"
+          iconColor="text-[#E3182D]"
         />
         <StatCard
           title="Total Orders"

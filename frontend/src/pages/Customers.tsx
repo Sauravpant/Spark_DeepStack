@@ -142,8 +142,8 @@ export default function Customers() {
           title="Total Customers"
           value={stats.total.toLocaleString()}
           icon={Users}
-          iconBg="bg-blue-50/80"
-          iconColor="text-blue-600"
+          iconBg="bg-red-50/80"
+          iconColor="text-[#E3182D]"
         />
         <StatCard
           title="Active Credit"

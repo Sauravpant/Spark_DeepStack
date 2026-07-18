@@ -301,8 +301,8 @@ export default function Transactions() {
           title="All Sales"
           value={formatCurrency(stats.totalSales)}
           icon={ShoppingCart}
-          iconBg="bg-blue-50/80"
-          iconColor="text-blue-600"
+          iconBg="bg-red-50/80"
+          iconColor="text-[#E3182D]"
         />
         <StatCard
           title="Credit Sales"

@@ -650,11 +650,11 @@ export default function CreditRisk() {
                 className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  <BarChart3 className="w-4 h-4 text-[#E3182D]" />
                   <span className="font-bold text-sm text-slate-900">
                     Global Feature Importance
                   </span>
-                  <Badge className="bg-blue-50 text-blue-600 border-blue-200 border text-[10px] h-auto px-2">
+                  <Badge className="bg-red-50 text-[#E3182D] border-red-200 border text-[10px] h-auto px-2">
                     Mean SHAP
                   </Badge>
                 </div>
@@ -669,7 +669,7 @@ export default function CreditRisk() {
                 <div className="px-5 pb-5 border-t border-slate-100">
                   {globalLoading ? (
                     <div className="flex items-center justify-center py-10 gap-3">
-                      <Loader2 className="w-5 h-5 animate-spin text-red-600" />
+                      <Loader2 className="w-5 h-5 animate-spin text-[#E3182D]" />
                       <span className="text-sm text-slate-500">
                         Loading global importance from model...
                       </span>
@@ -699,13 +699,13 @@ export default function CreditRisk() {
                                   <span className="text-slate-700 truncate pr-4">
                                     {featureLabel(feat)}
                                   </span>
-                                  <span className="text-blue-600 shrink-0">
+                                  <span className="text-[#E3182D] shrink-0">
                                     {Number(val).toFixed(4)}
                                   </span>
                                 </div>
                                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                                   <div
-                                    className="bg-blue-500 h-full rounded-full"
+                                    className="bg-[#E3182D] h-full rounded-full"
                                     style={{ width: `${pct}%` }}
                                   />
                                 </div>

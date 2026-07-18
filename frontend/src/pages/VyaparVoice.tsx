@@ -74,7 +74,9 @@ export default function VyaparVoice() {
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null,
+  );
 
   const [manualText, setManualText] = useState("");
   const [rawTranscript, setRawTranscript] = useState("");
@@ -97,7 +99,9 @@ export default function VyaparVoice() {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60).toString().padStart(2, "0");
+    const m = Math.floor(secs / 60)
+      .toString()
+      .padStart(2, "0");
     const s = (secs % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
@@ -238,7 +242,8 @@ export default function VyaparVoice() {
 
       // Connect standard AudioContext analyser for waveform render
       try {
-        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        const AudioCtx =
+          window.AudioContext || (window as any).webkitAudioContext;
         const audioCtx = new AudioCtx();
         const analyser = audioCtx.createAnalyser();
         analyser.fftSize = 64; // nice sized frequency bars
@@ -315,7 +320,9 @@ export default function VyaparVoice() {
           customer_id: null,
           payment_type: "cash",
           due_date: null,
-          notes: tx.notes || `Vyapar Voice: ${tx.action === "sale" ? "बिक्री" : "खरिद"}`,
+          notes:
+            tx.notes ||
+            `Vyapar Voice: ${tx.action === "sale" ? "बिक्री" : "खरिद"}`,
           items: tx.items.map((it) => ({
             spoken_product: it.spoken_product,
             quantity: it.quantity,
@@ -328,7 +335,9 @@ export default function VyaparVoice() {
         }));
       } else {
         const saleItems = data.matched_items.filter((i) => i.action === "sale");
-        const purchaseItems = data.matched_items.filter((i) => i.action === "purchase");
+        const purchaseItems = data.matched_items.filter(
+          (i) => i.action === "purchase",
+        );
         if (saleItems.length > 0) {
           parsedTxs.push({
             action: "sale",
@@ -369,13 +378,19 @@ export default function VyaparVoice() {
       }
 
       setTransactions(parsedTxs);
-      toast.success(`Analyzed ${parsedTxs.length} transaction entries!`, { id: toastId });
+      toast.success(`Analyzed ${parsedTxs.length} transaction entries!`, {
+        id: toastId,
+      });
     } finally {
       setIsExtracting(false);
     }
   };
 
-  const updateTransactionMeta = (txIndex: number, field: keyof EditableTransaction, value: any) => {
+  const updateTransactionMeta = (
+    txIndex: number,
+    field: keyof EditableTransaction,
+    value: any,
+  ) => {
     setTransactions((prev) => {
       const updated = [...prev];
       updated[txIndex] = { ...updated[txIndex], [field]: value };
@@ -391,7 +406,7 @@ export default function VyaparVoice() {
     txIndex: number,
     itemIndex: number,
     field: keyof EditableTransactionItem,
-    value: any
+    value: any,
   ) => {
     setTransactions((prev) => {
       const updated = [...prev];
@@ -454,7 +469,9 @@ export default function VyaparVoice() {
       {
         action,
         payment_type: "cash",
-        due_date: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
+        due_date: new Date(Date.now() + 7 * 86400000)
+          .toISOString()
+          .split("T")[0],
         notes: `Manual ${action}`,
         items: [
           {
@@ -483,14 +500,19 @@ export default function VyaparVoice() {
     transactions.forEach((tx, txIdx) => {
       const label = `Transaction #${txIdx + 1} (${tx.action === "sale" ? "Sale" : "Purchase"})`;
       if (tx.action === "sale" && tx.payment_type === "credit") {
-        if (!tx.customer_id) errors.push(`${label}: Credit sale requires a customer.`);
-        if (!tx.due_date) errors.push(`${label}: Credit sale requires a due date.`);
+        if (!tx.customer_id)
+          errors.push(`${label}: Credit sale requires a customer.`);
+        if (!tx.due_date)
+          errors.push(`${label}: Credit sale requires a due date.`);
       }
-      if (tx.items.length === 0) errors.push(`${label}: Needs at least one product.`);
+      if (tx.items.length === 0)
+        errors.push(`${label}: Needs at least one product.`);
       tx.items.forEach((item, itemIdx) => {
         const iLabel = `Line #${itemIdx + 1} in ${label}`;
-        if (!item.product_id) errors.push(`${iLabel}: Product must be selected from catalog.`);
-        if (!item.quantity || item.quantity <= 0) errors.push(`${iLabel}: Quantity must be > 0.`);
+        if (!item.product_id)
+          errors.push(`${iLabel}: Product must be selected from catalog.`);
+        if (!item.quantity || item.quantity <= 0)
+          errors.push(`${iLabel}: Quantity must be > 0.`);
       });
     });
     return errors;
@@ -581,7 +603,6 @@ export default function VyaparVoice() {
 
       <div className="min-h-screen bg-slate-50/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-
           {/* ─── Hero Header (Sleek Slate Dark design, no gradients) ─── */}
           <div className="relative overflow-hidden rounded-2xl bg-slate-900 p-6 md:p-8 border border-slate-800 shadow-sm">
             <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -590,8 +611,11 @@ export default function VyaparVoice() {
                   <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-650 bg-[#E3182D] shadow-sm">
                     <Mic className="w-4.5 h-4.5 text-white" />
                   </div>
-                  <Badge variant="outline" className="border-red-500/30 text-red-405 text-red-400 bg-red-950/20 text-[10px] uppercase tracking-wider font-bold px-2.5 py-0.5">
-                    <Zap className="w-2.5 h-2.5 mr-1 inline text-red-500" /> AI Assistant
+                  <Badge
+                    variant="outline"
+                    className="border-red-500/30 text-red-405 text-red-400 bg-red-950/20 text-[10px] uppercase tracking-wider font-bold px-2.5 py-0.5">
+                    <Zap className="w-2.5 h-2.5 mr-1 inline text-red-500" /> AI
+                    Assistant
                   </Badge>
                 </div>
                 <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
@@ -601,18 +625,28 @@ export default function VyaparVoice() {
                   </span>
                 </h1>
                 <p className="text-slate-400 text-xs md:text-sm max-w-lg leading-relaxed">
-                  Speak naturally in Nepali to record sales and stock-in. The AI extracts items, and you can choose cash or credit manually before saving.
+                  Speak naturally in Nepali to record sales and stock-in. The AI
+                  extracts items, and you can choose cash or credit manually
+                  before saving.
                 </p>
               </div>
 
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-center min-w-[90px]">
-                  <p className="text-xl font-bold text-white">{transactions.length}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">Drafts</p>
+                  <p className="text-xl font-bold text-white">
+                    {transactions.length}
+                  </p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
+                    Drafts
+                  </p>
                 </div>
                 <div className="px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-center min-w-[90px]">
-                  <p className="text-xl font-bold text-emerald-400">{processedCount}</p>
-                  <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">Saved</p>
+                  <p className="text-xl font-bold text-emerald-400">
+                    {processedCount}
+                  </p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5">
+                    Saved
+                  </p>
                 </div>
               </div>
             </div>
@@ -621,7 +655,6 @@ export default function VyaparVoice() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* ─── Left: Voice Input Hub ─── */}
             <div className="lg:col-span-4 space-y-6">
-
               {/* Recording Card */}
               <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden">
                 <CardHeader className="pb-4">
@@ -630,7 +663,8 @@ export default function VyaparVoice() {
                     Speech Capture
                   </CardTitle>
                   <CardDescription className="text-xs text-slate-500">
-                    Tap the microphone and describe your sale or purchase in Nepali
+                    Tap the microphone and describe your sale or purchase in
+                    Nepali
                   </CardDescription>
                 </CardHeader>
 
@@ -646,24 +680,24 @@ export default function VyaparVoice() {
                       className={`
                         relative z-10 w-20 h-20 rounded-full flex items-center justify-center
                         shadow-md font-bold text-white transition-all duration-200 outline-none
-                        ${isRecording
-                          ? "bg-red-650 bg-[#E3182D] hover:bg-red-700 scale-105 shadow-red-100"
+                        ${
+                          isRecording ?
+                            "bg-red-650 bg-[#E3182D] hover:bg-red-700 scale-105 shadow-red-100"
                           : "bg-slate-900 hover:bg-slate-800 hover:scale-105 active:scale-95"
                         }
                       `}
-                      aria-label={isRecording ? "Stop recording" : "Start recording"}
-                    >
-                      {isRecording ? (
+                      aria-label={
+                        isRecording ? "Stop recording" : "Start recording"
+                      }>
+                      {isRecording ?
                         <MicOff className="w-7 h-7 text-white" />
-                      ) : (
-                        <Mic className="w-7 h-7 text-white" />
-                      )}
+                      : <Mic className="w-7 h-7 text-white" />}
                     </button>
                   </div>
 
                   {/* Realtime Canvas visualizer */}
                   <div className="w-full text-center">
-                    {isRecording ? (
+                    {isRecording ?
                       <div className="flex flex-col items-center gap-3 w-full">
                         <canvas
                           ref={canvasRef}
@@ -677,13 +711,14 @@ export default function VyaparVoice() {
                             Listening — {formatTime(recordingTime)}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-400">Tap button again to finalize</p>
+                        <p className="text-[11px] text-slate-400">
+                          Tap button again to finalize
+                        </p>
                       </div>
-                    ) : (
-                      <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
+                    : <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
                         Tap microphone to start speaking
                       </p>
-                    )}
+                    }
                   </div>
 
                   {/* Predefined Voice Commands */}
@@ -697,10 +732,11 @@ export default function VyaparVoice() {
                         type="button"
                         onClick={() => {
                           setManualText(cmd.text);
-                          toast.success("Command copied! Click 'Analyze' below.");
+                          toast.success(
+                            "Command copied! Click 'Analyze' below.",
+                          );
                         }}
-                        className="w-full text-left px-3 py-2.5 rounded-xl border border-slate-150 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 group"
-                      >
+                        className="w-full text-left px-3 py-2.5 rounded-xl border border-slate-150 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all duration-150 group">
                         <div className="flex items-center justify-between gap-3">
                           <span className="text-xs text-slate-700 font-medium leading-relaxed line-clamp-2">
                             "{cmd.text}"
@@ -738,19 +774,17 @@ export default function VyaparVoice() {
                     <Button
                       type="submit"
                       disabled={isExtracting || !manualText.trim()}
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-2.5 rounded-xl shadow-sm transition-all duration-150"
-                    >
-                      {isExtracting ? (
+                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-2.5 rounded-xl shadow-sm transition-all duration-150">
+                      {isExtracting ?
                         <>
                           <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
                           Analyzing text...
                         </>
-                      ) : (
-                        <>
+                      : <>
                           <Sparkles className="w-3.5 h-3.5 mr-2" />
                           Analyze &amp; Extract
                         </>
-                      )}
+                      }
                     </Button>
                   </form>
                 </CardContent>
@@ -759,7 +793,6 @@ export default function VyaparVoice() {
 
             {/* ─── Right: Transaction Review Panel ─── */}
             <div className="lg:col-span-8 space-y-6">
-
               {/* Speech bubble for transcription */}
               {rawTranscript && (
                 <div className="fade-in flex items-start gap-3 px-4 py-3 bg-white rounded-2xl border border-slate-200 shadow-sm">
@@ -767,16 +800,19 @@ export default function VyaparVoice() {
                     <Volume2 className="w-3.5 h-3.5 text-slate-500" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recognized Nepali Text</p>
-                    <p className="text-xs text-slate-800 font-medium leading-relaxed">"{rawTranscript}"</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Recognized Nepali Text
+                    </p>
+                    <p className="text-xs text-slate-800 font-medium leading-relaxed">
+                      "{rawTranscript}"
+                    </p>
                   </div>
                   <button
                     onClick={() => {
                       setRawTranscript("");
                       setTransactions([]);
                     }}
-                    className="shrink-0 text-slate-400 hover:text-red-650 hover:text-red-600 text-xs font-semibold px-2 py-1 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
+                    className="shrink-0 text-slate-400 hover:text-red-650 hover:text-red-600 text-xs font-semibold px-2 py-1 rounded-lg hover:bg-slate-50 transition-colors">
                     Clear Input
                   </button>
                 </div>
@@ -795,7 +831,9 @@ export default function VyaparVoice() {
                           <h3 className="font-bold text-emerald-900 text-sm md:text-base">
                             Transactions Saved Successfully
                           </h3>
-                          <p className="text-xs text-emerald-700 leading-relaxed">{confirmationText}</p>
+                          <p className="text-xs text-emerald-700 leading-relaxed">
+                            {confirmationText}
+                          </p>
                           <div className="flex flex-wrap gap-2 mt-3">
                             <Badge className="bg-emerald-100/80 text-emerald-800 border border-emerald-200/50 font-semibold text-[10px] px-2.5 py-0.5">
                               ✓ {processedCount} items logged
@@ -815,40 +853,45 @@ export default function VyaparVoice() {
                               onClick={playConfirmationAudio}
                               className={`
                                 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 outline-none
-                                ${isPlayingAudio
-                                  ? "bg-emerald-600 text-white scale-95"
+                                ${
+                                  isPlayingAudio ?
+                                    "bg-emerald-600 text-white scale-95"
                                   : "bg-slate-900 text-white hover:bg-slate-800"
                                 }
-                              `}
-                            >
-                              {isPlayingAudio ? (
+                              `}>
+                              {isPlayingAudio ?
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
-                              )}
+                              : <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
+                              }
                             </button>
                             <div>
                               <p className="text-xs font-semibold text-slate-800">
-                                {isPlayingAudio ? "Playing confirmation..." : "Play Voice Confirmation"}
+                                {isPlayingAudio ?
+                                  "Playing confirmation..."
+                                : "Play Voice Confirmation"}
                               </p>
                               <p className="text-[10px] text-slate-400">
-                                Click to hear the transaction receipt read aloud in Nepali
+                                Click to hear the transaction receipt read aloud
+                                in Nepali
                               </p>
                             </div>
                           </div>
                           {isPlayingAudio && (
                             <div className="flex items-center gap-0.5 px-3">
-                              {[1, 2.5, 3.5, 2, 4, 3, 1.5, 2.5, 1].map((h, idx) => (
-                                <div
-                                  key={idx}
-                                  className="w-0.5 bg-emerald-500 rounded-full"
-                                  style={{
-                                    height: `${h * 4}px`,
-                                    animation: "wave 0.5s ease-in-out infinite alternate",
-                                    animationDelay: `${idx * 0.05}s`
-                                  }}
-                                />
-                              ))}
+                              {[1, 2.5, 3.5, 2, 4, 3, 1.5, 2.5, 1].map(
+                                (h, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="w-0.5 bg-emerald-500 rounded-full"
+                                    style={{
+                                      height: `${h * 4}px`,
+                                      animation:
+                                        "wave 0.5s ease-in-out infinite alternate",
+                                      animationDelay: `${idx * 0.05}s`,
+                                    }}
+                                  />
+                                ),
+                              )}
                             </div>
                           )}
                         </div>
@@ -867,9 +910,12 @@ export default function VyaparVoice() {
                         <Loader2 className="w-7 h-7 text-slate-800 animate-spin" />
                       </div>
                     </div>
-                    <h3 className="font-bold text-slate-800 text-base">Parsing Transaction</h3>
+                    <h3 className="font-bold text-slate-800 text-base">
+                      Parsing Transaction
+                    </h3>
                     <p className="text-slate-500 text-xs mt-1.5 max-w-xs leading-relaxed px-4">
-                      Extracting items, identifying actions, and matching against inventory...
+                      Extracting items, identifying actions, and matching
+                      against inventory...
                     </p>
                     <div className="flex gap-1.5 mt-5">
                       {[0, 1, 2].map((i) => (
@@ -894,27 +940,29 @@ export default function VyaparVoice() {
                           <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
                             Review Transactions
                             <Badge className="bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] px-2.5 py-0.5">
-                              {transactions.length} Draft{transactions.length === 1 ? "" : "s"}
+                              {transactions.length} Draft
+                              {transactions.length === 1 ? "" : "s"}
                             </Badge>
                           </CardTitle>
                           <CardDescription className="text-xs text-slate-500">
-                            Confirm invoice items, prices, and match statuses below.
+                            Confirm invoice items, prices, and match statuses
+                            below.
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => addNewTransaction("sale")}
-                            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-                          >
+                            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors">
                             <Plus className="w-3 h-3" />
-                            <ShoppingCart className="w-3 h-3 text-red-600" /> + Sale
+                            <ShoppingCart className="w-3 h-3 text-red-600" /> +
+                            Sale
                           </button>
                           <button
                             onClick={() => addNewTransaction("purchase")}
-                            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors"
-                          >
+                            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors">
                             <Plus className="w-3 h-3" />
-                            <Package className="w-3 h-3 text-emerald-600" /> + Purchase
+                            <Package className="w-3 h-3 text-emerald-600" /> +
+                            Purchase
                           </button>
                         </div>
                       </div>
@@ -926,40 +974,53 @@ export default function VyaparVoice() {
                         return (
                           <div
                             key={txIdx}
-                            className="p-5 space-y-4 hover:bg-slate-50/20 transition-colors duration-150"
-                          >
+                            className="p-5 space-y-4 hover:bg-slate-50/20 transition-colors duration-150">
                             {/* Metadata config row */}
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-200">
                               <div className="flex items-center gap-3 flex-wrap">
-                                <div className={`
+                                <div
+                                  className={`
                                   flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold
-                                  ${isSale
-                                    ? "bg-red-50 text-red-700 border border-red-200/60"
+                                  ${
+                                    isSale ?
+                                      "bg-red-50 text-red-700 border border-red-200/60"
                                     : "bg-slate-900 text-white"
                                   }
                                 `}>
-                                  {isSale ? <ShoppingCart className="w-3.5 h-3.5" /> : <Package className="w-3.5 h-3.5" />}
+                                  {isSale ?
+                                    <ShoppingCart className="w-3.5 h-3.5" />
+                                  : <Package className="w-3.5 h-3.5" />}
                                   {isSale ? "SALE (बिक्री)" : "PURCHASE (खरिद)"}
                                 </div>
 
                                 {isSale && (
                                   <div className="flex items-center bg-slate-200/70 p-0.5 rounded-lg border border-slate-200">
-                                    {(["cash", "credit"] as const).map((type) => (
-                                      <button
-                                        key={type}
-                                        type="button"
-                                        onClick={() => updateTransactionMeta(txIdx, "payment_type", type)}
-                                        className={`
+                                    {(["cash", "credit"] as const).map(
+                                      (type) => (
+                                        <button
+                                          key={type}
+                                          type="button"
+                                          onClick={() =>
+                                            updateTransactionMeta(
+                                              txIdx,
+                                              "payment_type",
+                                              type,
+                                            )
+                                          }
+                                          className={`
                                           text-[10px] font-bold px-3 py-1 rounded-md transition-all duration-150
-                                          ${tx.payment_type === type
-                                            ? "bg-white text-slate-900 shadow-sm"
+                                          ${
+                                            tx.payment_type === type ?
+                                              "bg-white text-slate-900 shadow-sm"
                                             : "text-slate-500 hover:text-slate-800"
                                           }
-                                        `}
-                                      >
-                                        {type === "cash" ? "Cash" : "Credit (उधारो)"}
-                                      </button>
-                                    ))}
+                                        `}>
+                                          {type === "cash" ?
+                                            "Cash"
+                                          : "Credit (उधारो)"}
+                                        </button>
+                                      ),
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -967,8 +1028,7 @@ export default function VyaparVoice() {
                               <button
                                 type="button"
                                 onClick={() => removeTransaction(txIdx)}
-                                className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-650 hover:bg-red-50 hover:text-red-600 px-2.5 py-1 rounded-lg transition-colors ml-auto sm:ml-0"
-                              >
+                                className="flex items-center gap-1 text-xs text-slate-400 hover:text-red-650 hover:bg-red-50 hover:text-red-600 px-2.5 py-1 rounded-lg transition-colors ml-auto sm:ml-0">
                                 <Trash2 className="w-3.5 h-3.5" />
                                 Remove Entry
                               </button>
@@ -976,25 +1036,44 @@ export default function VyaparVoice() {
 
                             {/* Client & Date Details */}
                             {isSale && (
-                              <div className={`flex flex-wrap gap-3 px-3 py-3 rounded-xl border ${
-                                tx.payment_type === "credit"
-                                  ? "bg-amber-50/40 border-amber-200/60"
+                              <div
+                                className={`flex flex-wrap gap-3 px-3 py-3 rounded-xl border ${
+                                  tx.payment_type === "credit" ?
+                                    "bg-amber-50/40 border-amber-200/60"
                                   : "bg-slate-50/50 border-slate-200/60"
-                              }`}>
+                                }`}>
                                 <div className="flex items-center gap-2">
-                                  <User className={`w-3.5 h-3.5 ${tx.payment_type === "credit" ? "text-amber-600" : "text-slate-500"}`} />
+                                  <User
+                                    className={`w-3.5 h-3.5 ${tx.payment_type === "credit" ? "text-amber-600" : "text-slate-500"}`}
+                                  />
                                   <select
                                     value={tx.customer_id || ""}
-                                    onChange={(e) => updateTransactionMeta(txIdx, "customer_id", e.target.value)}
+                                    onChange={(e) =>
+                                      updateTransactionMeta(
+                                        txIdx,
+                                        "customer_id",
+                                        e.target.value,
+                                      )
+                                    }
                                     className={`text-xs px-2.5 py-1.5 rounded-lg border font-medium focus:outline-none focus:ring-2 bg-white ${
-                                      tx.payment_type === "credit" && !tx.customer_id
-                                        ? "border-amber-400 focus:ring-amber-400/60 focus:border-amber-500"
-                                        : "border-slate-200 focus:ring-slate-400/60 focus:border-slate-400"
-                                    }`}
-                                  >
-                                    <option value="">— Select Customer {tx.payment_type === "credit" ? "(Required)" : "(Optional)"} —</option>
+                                      (
+                                        tx.payment_type === "credit" &&
+                                        !tx.customer_id
+                                      ) ?
+                                        "border-amber-400 focus:ring-amber-400/60 focus:border-amber-500"
+                                      : "border-slate-200 focus:ring-slate-400/60 focus:border-slate-400"
+                                    }`}>
+                                    <option value="">
+                                      — Select Customer{" "}
+                                      {tx.payment_type === "credit" ?
+                                        "(Required)"
+                                      : "(Optional)"}{" "}
+                                      —
+                                    </option>
                                     {customerList.map((c) => (
-                                      <option key={c.id} value={c.id}>{c.full_name}</option>
+                                      <option key={c.id} value={c.id}>
+                                        {c.full_name}
+                                      </option>
                                     ))}
                                   </select>
                                 </div>
@@ -1005,7 +1084,13 @@ export default function VyaparVoice() {
                                     <input
                                       type="date"
                                       value={tx.due_date || ""}
-                                      onChange={(e) => updateTransactionMeta(txIdx, "due_date", e.target.value)}
+                                      onChange={(e) =>
+                                        updateTransactionMeta(
+                                          txIdx,
+                                          "due_date",
+                                          e.target.value,
+                                        )
+                                      }
                                       className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/60 transition-all font-medium"
                                     />
                                   </div>
@@ -1015,7 +1100,13 @@ export default function VyaparVoice() {
                                   <input
                                     type="text"
                                     value={tx.notes || ""}
-                                    onChange={(e) => updateTransactionMeta(txIdx, "notes", e.target.value)}
+                                    onChange={(e) =>
+                                      updateTransactionMeta(
+                                        txIdx,
+                                        "notes",
+                                        e.target.value,
+                                      )
+                                    }
                                     placeholder="Add transaction remark..."
                                     className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400/60 transition-all w-48"
                                   />
@@ -1028,53 +1119,85 @@ export default function VyaparVoice() {
                               <table className="w-full text-left text-xs min-w-[600px]">
                                 <thead>
                                   <tr className="bg-slate-50/80 border-b border-slate-200">
-                                    <th className="px-4 py-3 font-semibold text-slate-500 w-1/4">Spoken Product Name</th>
-                                    <th className="px-4 py-3 font-semibold text-slate-500 w-1/3">Catalog Match</th>
-                                    <th className="px-4 py-3 font-semibold text-slate-500 w-24">Qty</th>
-                                    <th className="px-4 py-3 font-semibold text-slate-500 w-24 text-center">Confidence</th>
+                                    <th className="px-4 py-3 font-semibold text-slate-500 w-1/4">
+                                      Spoken Product Name
+                                    </th>
+                                    <th className="px-4 py-3 font-semibold text-slate-500 w-1/3">
+                                      Catalog Match
+                                    </th>
+                                    <th className="px-4 py-3 font-semibold text-slate-500 w-24">
+                                      Qty
+                                    </th>
+                                    <th className="px-4 py-3 font-semibold text-slate-500 w-24 text-center">
+                                      Confidence
+                                    </th>
                                     <th className="px-4 py-3 font-semibold text-slate-500 text-center w-12" />
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                   {tx.items.map((item, itemIdx) => {
                                     const isMatched = !!item.product_id;
-                                    const stockLow = isMatched && item.stock_quantity !== null && item.quantity > item.stock_quantity;
+                                    const stockLow =
+                                      isMatched &&
+                                      item.stock_quantity !== null &&
+                                      item.quantity > item.stock_quantity;
                                     return (
                                       <tr
                                         key={itemIdx}
-                                        className="hover:bg-slate-50/40 transition-colors"
-                                      >
+                                        className="hover:bg-slate-50/40 transition-colors">
                                         <td className="px-4 py-3">
                                           <span className="font-semibold text-slate-800 text-xs">
-                                            {item.spoken_product || <span className="italic text-slate-400">Added manually</span>}
+                                            {item.spoken_product || (
+                                              <span className="italic text-slate-400">
+                                                Added manually
+                                              </span>
+                                            )}
                                           </span>
                                         </td>
                                         <td className="px-4 py-3">
                                           <div className="space-y-1">
                                             <select
                                               value={item.product_id || ""}
-                                              onChange={(e) => updateTransactionItem(txIdx, itemIdx, "product_id", e.target.value)}
+                                              onChange={(e) =>
+                                                updateTransactionItem(
+                                                  txIdx,
+                                                  itemIdx,
+                                                  "product_id",
+                                                  e.target.value,
+                                                )
+                                              }
                                               className={`
                                                 text-xs px-2.5 py-1.5 rounded-lg border font-medium w-full max-w-xs
                                                 focus:outline-none focus:ring-2 transition-all bg-white
-                                                ${isMatched
-                                                  ? "border-slate-200 focus:ring-slate-400/60 focus:border-slate-400 text-slate-800"
+                                                ${
+                                                  isMatched ?
+                                                    "border-slate-200 focus:ring-slate-400/60 focus:border-slate-400 text-slate-800"
                                                   : "border-red-400 ring-1 ring-red-300 bg-red-50/10 text-red-800 focus:ring-red-400/60"
                                                 }
-                                              `}
-                                            >
-                                              <option value="">— Match Product —</option>
+                                              `}>
+                                              <option value="">
+                                                — Match Product —
+                                              </option>
                                               {catalogProducts.map((p) => (
                                                 <option key={p.id} value={p.id}>
-                                                  {p.product_name} ({p.stock_quantity !== null ? `Stock: ${p.stock_quantity}` : "No stock limit"} {p.unit})
+                                                  {p.product_name} (
+                                                  {p.stock_quantity !== null ?
+                                                    `Stock: ${p.stock_quantity}`
+                                                  : "No stock limit"}{" "}
+                                                  {p.unit})
                                                 </option>
                                               ))}
                                             </select>
-                                            {isMatched && item.stock_quantity !== null && (
-                                              <div className="text-[10px] text-slate-400 pl-1">
-                                                Available Stock: <span className="font-semibold text-slate-600">{item.stock_quantity}</span> {item.unit || "units"}
-                                              </div>
-                                            )}
+                                            {isMatched &&
+                                              item.stock_quantity !== null && (
+                                                <div className="text-[10px] text-slate-400 pl-1">
+                                                  Available Stock:{" "}
+                                                  <span className="font-semibold text-slate-600">
+                                                    {item.stock_quantity}
+                                                  </span>{" "}
+                                                  {item.unit || "units"}
+                                                </div>
+                                              )}
                                           </div>
                                         </td>
                                         <td className="px-4 py-3">
@@ -1083,7 +1206,15 @@ export default function VyaparVoice() {
                                               type="number"
                                               value={item.quantity}
                                               min="1"
-                                              onChange={(e) => updateTransactionItem(txIdx, itemIdx, "quantity", parseFloat(e.target.value) || 0)}
+                                              onChange={(e) =>
+                                                updateTransactionItem(
+                                                  txIdx,
+                                                  itemIdx,
+                                                  "quantity",
+                                                  parseFloat(e.target.value) ||
+                                                    0,
+                                                )
+                                              }
                                               className={`
                                                 w-20 px-2 py-1.5 rounded-lg border text-xs font-semibold
                                                 focus:outline-none focus:ring-2 focus:ring-slate-400/60 transition-all bg-white
@@ -1092,31 +1223,32 @@ export default function VyaparVoice() {
                                             />
                                             {stockLow && isSale && (
                                               <span className="text-[9px] text-amber-600 font-bold flex items-center gap-0.5 mt-0.5">
-                                                <AlertTriangle className="w-2.5 h-2.5" /> Low stock
+                                                <AlertTriangle className="w-2.5 h-2.5" />{" "}
+                                                Low stock
                                               </span>
                                             )}
                                           </div>
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                          {isMatched ? (
+                                          {isMatched ?
                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
                                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                               Matched
                                             </span>
-                                          ) : (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-100">
+                                          : <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-700 border border-red-100">
                                               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                                               No Match
                                             </span>
-                                          )}
+                                          }
                                         </td>
                                         <td className="px-4 py-3 text-center">
                                           <button
                                             type="button"
-                                            onClick={() => deleteLineItem(txIdx, itemIdx)}
+                                            onClick={() =>
+                                              deleteLineItem(txIdx, itemIdx)
+                                            }
                                             className="p-1.5 rounded-lg text-slate-350 hover:text-red-650 hover:bg-slate-100 transition-colors"
-                                            title="Remove item"
-                                          >
+                                            title="Remove item">
                                             <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-650" />
                                           </button>
                                         </td>
@@ -1131,8 +1263,7 @@ export default function VyaparVoice() {
                               <button
                                 type="button"
                                 onClick={() => addLineItem(txIdx)}
-                                className="flex items-center gap-1.5 text-xs text-slate-650 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors bg-white font-medium shadow-sm"
-                              >
+                                className="flex items-center gap-1.5 text-xs text-slate-650 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors bg-white font-medium shadow-sm">
                                 <Plus className="w-3.5 h-3.5" /> Add line item
                               </button>
                             </div>
@@ -1151,7 +1282,11 @@ export default function VyaparVoice() {
                           </h4>
                           <ul className="space-y-1 pl-6">
                             {validationErrors.map((err, idx) => (
-                              <li key={idx} className="text-xs text-amber-700 list-disc leading-relaxed">{err}</li>
+                              <li
+                                key={idx}
+                                className="text-xs text-amber-700 list-disc leading-relaxed">
+                                {err}
+                              </li>
                             ))}
                           </ul>
                         </div>
@@ -1159,27 +1294,31 @@ export default function VyaparVoice() {
 
                       <div className="flex items-center justify-between flex-wrap gap-4">
                         <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-sm">
-                          * Saving commits transactions, logs sales history, and posts purchase bills directly.
+                          * Saving commits transactions, logs sales history, and
+                          posts purchase bills directly.
                         </p>
                         <div className="flex items-center gap-3">
                           <Button
                             variant="outline"
                             onClick={() => setTransactions([])}
                             disabled={isSaving}
-                            className="border-slate-250 hover:bg-slate-100 text-slate-600 rounded-xl font-semibold"
-                          >
+                            className="border-slate-250 hover:bg-slate-100 text-slate-600 rounded-xl font-semibold">
                             <RotateCcw className="w-4 h-4 mr-2" /> Reset Drafts
                           </Button>
                           <Button
                             onClick={handleConfirmSave}
                             disabled={!isValid || isSaving}
-                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                          >
-                            {isSaving ? (
-                              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Committing...</>
-                            ) : (
-                              <><CheckCircle className="w-4 h-4 mr-2" /> Save Transactions</>
-                            )}
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 rounded-xl transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                            {isSaving ?
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />{" "}
+                                Committing...
+                              </>
+                            : <>
+                                <CheckCircle className="w-4 h-4 mr-2" /> Save
+                                Transactions
+                              </>
+                            }
                           </Button>
                         </div>
                       </div>
@@ -1199,21 +1338,22 @@ export default function VyaparVoice() {
                       <Sparkles className="w-3.5 h-3.5 text-white" />
                     </div>
                   </div>
-                  <h3 className="font-bold text-slate-900 text-lg">Voice Feed Center</h3>
+                  <h3 className="font-bold text-slate-900 text-lg">
+                    Voice Feed Center
+                  </h3>
                   <p className="text-slate-500 text-xs mt-2 max-w-sm leading-relaxed px-6">
-                    Use speech recording or type a statement in the side panel. Voice matches will appear here for your approval.
+                    Use speech recording or type a statement in the side panel.
+                    Voice matches will appear here for your approval.
                   </p>
                   <div className="flex items-center gap-3 mt-7">
                     <button
                       onClick={() => addNewTransaction("sale")}
-                      className="flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 text-slate-755 bg-white hover:bg-slate-50 transition-colors shadow-sm"
-                    >
+                      className="flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 text-slate-755 bg-white hover:bg-slate-50 transition-colors shadow-sm">
                       <Plus className="w-3.5 h-3.5" /> + Manual Sale
                     </button>
                     <button
                       onClick={() => addNewTransaction("purchase")}
-                      className="flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 text-slate-755 bg-white hover:bg-slate-50 transition-colors shadow-sm"
-                    >
+                      className="flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-200 text-slate-755 bg-white hover:bg-slate-50 transition-colors shadow-sm">
                       <Plus className="w-3.5 h-3.5" /> + Manual Purchase
                     </button>
                   </div>
