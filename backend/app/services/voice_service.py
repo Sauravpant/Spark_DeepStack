@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import shutil
 import tempfile
 import uuid
@@ -519,6 +520,8 @@ def confirm_voice_transactions(
     parts = []
     for p in processed:
         if p.action == "sale":
+            #from product name remove the units like 2L, 500ml, 1kg, etc. if present in brackets
+            p.product_name = clean_product_name(p.product_name) 
             parts.append(
                 f"{p.product_name} {p.quantity} बिक्री भयो। भण्डारमा {p.new_stock} बाँकी।"
             )
@@ -602,3 +605,14 @@ def match_extracted_transactions(
             }
         )
     return result
+
+
+
+def clean_product_name(name: str) -> str:
+    name = re.sub(
+        r"\s*\(?\d+(?:\.\d+)?\s*(?:kg|g|gm|mg|ml|l|ltr|litre|liter|pcs?|pc)\)?\s*$",
+        "",
+        name,
+        flags=re.IGNORECASE,
+    )
+    return name.strip()
