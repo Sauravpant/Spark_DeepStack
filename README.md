@@ -366,7 +366,7 @@ _TODO: fill in before submission if applicable._ If any part of this codebase, d
 - **90%+** of Nepal's retail sector is made up of traditional kirana outlets _(Source: UNCDF)_
 - **450k+** kirana outlets across Nepal serve as the primary retail distribution channel _(Source: National Statistics Office)_
 - **#1** — Wholesale/retail trade is Nepal's largest economic SME sector
-- **14.1%** contribution to Nepal's GDP in FY 2025/26 _(Source: Nepal Rastra Bank / National Statistics Office)_
+- **14.1%** contribution to Nepal's GDP in FY 2025/26 _(Source: Nepal Rastra Bank, National Statistics Office)_
 
 > "A massive retail economy exists. The intelligence layer is missing."
 
