@@ -10,7 +10,7 @@ Built by **Team DeepStack** for the **Spark_DeepStack** hackathon.
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Project Name** | VyaparAI                                                                                                                                                                               |
 | **Team**         | DeepStack                                                                                                                                                                          |
-| **Track**        | AI and Smart Automation |
+| **Track**        | Fintech|
 | **Repository**   | [Spark_DeepStack](https://github.com/Sauravpant/Spark_DeepStack)                                                                                                                       |
 | **Department**   | Computer Engineering                                                                                                                                                                   |
 
