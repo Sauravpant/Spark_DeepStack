@@ -1,0 +1,41 @@
+# Secrets - pass these via docker-compose env_file / environment instead
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+.venv/
+env/
+
+# Tests
+tests/
+
+# ML: keep trained model files, drop everything else that's large/regeneratable
+ml/**/data/
+ml/**/notebooks/
+ml/**/catboost_info/
+ml/**/logs/
+ml/**/artifacts/
+ml/**/*.ipynb
+ml/**/__pycache__/
+
+# Version control / editor / OS
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+
+# Misc
+*.log
+*.md
