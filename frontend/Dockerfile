@@ -9,10 +9,7 @@ RUN npm ci
 
 COPY . .
 
-# API base URL baked into the static build.
-# Defaults to a relative path so nginx (below) can reverse-proxy it to the
-# backend container - override at build time with:
-#   docker build --build-arg VITE_API_BASE_URL=https://api.example.com/api/v1 .
+
 ARG VITE_API_BASE_URL=/api/v1
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 

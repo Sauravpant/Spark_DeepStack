@@ -24,7 +24,6 @@ services:
       start_period: 15s
 
 
-
   frontend:
   
     build:

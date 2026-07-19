@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+
 # Install python deps first for better layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \

@@ -18,9 +18,8 @@ venv/
 env/
 
 # Tests
-tests/
+tests
 
-# ML: keep trained model files, drop everything else that's large/regeneratable
 ml/**/data/
 ml/**/notebooks/
 ml/**/catboost_info/
